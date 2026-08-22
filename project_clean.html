@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sub-Share - CSE370 Frontend Layout (Group 10, Lab Sec 03)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07051a;--card:#12102e;--card2:#181540;--line:#2a2456;--txt:#eae8f7;--dim:#9a95c4;--dim2:#6f699c;--violet:#7c5cfc;--teal:#00d9a6;--amber:#ffb648;--red:#ff5c7a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(760px 420px at 10% -6%,rgba(124,92,252,.22),transparent 70%),radial-gradient(620px 400px at 94% 6%,rgba(0,217,166,.11),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 22px 70px}
+h1,h2,h3,.serif{font-family:'Playfair Display',Georgia,serif;font-weight:700;letter-spacing:-.5px}
+.mono,.num{font-family:'DM Mono',ui-monospace,monospace}
+a{color:inherit;text-decoration:none}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(7,5,26,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.navin{max-width:1180px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px}
+.logo{width:29px;height:29px;border-radius:9px;background:linear-gradient(135deg,var(--violet),var(--teal));display:grid;place-items:center;font-size:14px}
+.nl{display:flex;gap:3px;flex-wrap:wrap;flex:1}
+.nl a{padding:6px 11px;border-radius:8px;font-size:13.5px;color:var(--dim);font-weight:500;cursor:pointer}
+.nl a:hover{background:var(--card2);color:var(--txt)}
+.nl a.on{background:var(--violet);color:#fff}
+.nl .sep{width:1px;background:var(--line);margin:4px 7px}
+.btn{padding:8px 15px;border-radius:9px;border:1px solid var(--line);font-size:13.5px;font-weight:600;cursor:pointer;background:none;color:var(--txt);font-family:inherit}
+.btn.p{background:var(--violet);border-color:var(--violet);color:#fff}
+.btn.danger{background:rgba(255,92,122,.12);border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:rgba(255,92,122,.22)}
+
+/* page */
+.page{display:none;padding-top:30px}
+.page.on{display:block}
+.hd{margin-bottom:16px}
+.hd .k{font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--violet);font-weight:700;margin-bottom:7px}
+.hd h1{font-size:35px;margin-bottom:5px}
+.hd p{color:var(--dim);max-width:620px;font-size:14.5px}
+
+/* schema badge */
+.sb{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:10px;padding:12px 15px;margin:16px 0 26px;font-size:12.5px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.sb b{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.7px;color:var(--dim2);text-transform:uppercase;margin-right:2px}
+.t{font-family:'DM Mono',monospace;font-size:11.5px;padding:3px 8px;border-radius:6px;background:var(--card2);border:1px solid var(--line);color:var(--dim)}
+.t.r{border-color:#2f4a6b;color:#8ec5ff}
+.t.w{border-color:#5a3a2a;color:var(--amber)}
+.fno{background:var(--violet);color:#fff;font-weight:700;padding:3px 9px;border-radius:6px;font-size:11.5px;font-family:'DM Mono',monospace}
+
+/* layout bits */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:17px;position:relative;overflow:hidden}
+.card.hov:hover{border-color:var(--violet);transform:translateY(-2px);transition:.15s}
+.strip{position:absolute;top:0;left:0;right:0;height:3px}
+.two{display:grid;grid-template-columns:265px 1fr;gap:20px;align-items:start}
+.two.rev{grid-template-columns:1fr 310px}
+@media(max-width:860px){.two,.two.rev{grid-template-columns:1fr}}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.pill{padding:6px 14px;border-radius:99px;border:1px solid var(--line);font-size:13px;color:var(--dim);cursor:pointer;background:var(--card)}
+.pill.on{background:var(--violet);border-color:var(--violet);color:#fff;font-weight:600}
+.inp{width:100%;padding:11px 14px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--txt);font-family:inherit;font-size:14px}
+.inp::placeholder{color:var(--dim2)}
+.inp:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px rgba(124,92,252,.15)}
+.row{display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+.sp{justify-content:space-between}
+.bar{height:6px;border-radius:99px;background:var(--card2);overflow:hidden;margin:9px 0 5px}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--teal))}
+.mut{color:var(--dim);font-size:13px}
+.mut2{color:var(--dim2);font-size:12px}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase}
+.tag.pend{background:rgba(255,182,72,.14);color:var(--amber)}
+.tag.appr{background:rgba(0,217,166,.14);color:var(--teal)}
+.tag.rej{background:rgba(255,92,122,.14);color:var(--red)}
+.tag.paid{background:rgba(124,92,252,.18);color:#b6a4ff}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--dim2);padding:9px 11px;border-bottom:1px solid var(--line);font-weight:700}
+td{padding:11px;border-bottom:1px solid rgba(42,36,86,.55);color:var(--dim)}
+td b{color:var(--txt);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px}
+.stat .v{font-family:'DM Mono',monospace;font-size:25px;font-weight:500;margin-bottom:2px}
+.stat .l{font-size:11.5px;color:var(--dim2);text-transform:uppercase;letter-spacing:.8px}
+.note{background:rgba(124,92,252,.09);border:1px dashed #4a3a8f;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--dim);margin:20px 0}
+.note b{color:#b6a4ff}
+.sect{margin:34px 0 14px;font-size:13px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim2);font-weight:700}
+.chart{display:flex;align-items:flex-end;gap:9px;height:150px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.chart div{flex:1;background:linear-gradient(180deg,var(--violet),rgba(124,92,252,.22));border-radius:5px 5px 0 0;position:relative}
+.chart div span{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--dim2)}
+.slot{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:8px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--line);background:var(--card2);color:var(--dim2)}
+.slot.f{background:rgba(124,92,252,.22);border-color:var(--violet);color:#c9baff}
+.step{display:flex;gap:11px;align-items:center;margin-bottom:9px;font-size:13.5px}
+.step i{width:25px;height:25px;border-radius:99px;display:grid;place-items:center;font-size:11.5px;font-family:'DM Mono',monospace;background:var(--card2);border:1px solid var(--line);color:var(--dim2);flex:none;font-style:normal}
+.step.on i{background:var(--violet);border-color:var(--violet);color:#fff}
+.ft{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim2);font-size:12.5px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.banner{background:linear-gradient(135deg,rgba(124,92,252,.2),rgba(0,217,166,.12));border:1px solid var(--line);border-radius:15px;padding:26px;text-align:center;margin-top:34px}
+
+/* auth-specific */
+.auth-wrap{max-width:440px;margin:48px auto}
+.auth-logo{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--violet),var(--teal));display:grid;place-items:center;font-size:24px;margin:0 auto 20px}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0}
+.auth-divider span{flex:1;height:1px;background:var(--line)}
+.auth-divider p{font-size:12px;color:var(--dim2)}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.role-card{border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;text-align:center;background:var(--card2);transition:.15s}
+.role-card:hover,.role-card.sel{border-color:var(--violet);background:rgba(124,92,252,.1)}
+.role-card .ri{font-size:26px;margin-bottom:6px}
+.role-card .rl{font-size:13px;font-weight:600}
+.role-card .rd{font-size:11.5px;color:var(--dim2);margin-top:3px}
+.logout-wrap{max-width:420px;margin:80px auto;text-align:center}
+.logout-icon{width:72px;height:72px;border-radius:99px;background:rgba(255,92,122,.1);border:1px solid rgba(255,92,122,.3);display:grid;place-items:center;font-size:32px;margin:0 auto 24px}
+.inp-group{margin-bottom:15px}
+.inp-group label{display:block;font-size:12.5px;color:var(--dim2);margin-bottom:6px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.pw-wrap{position:relative}
+.pw-wrap .inp{padding-right:44px}
+.pw-eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim2);cursor:pointer;font-size:16px;padding:4px}
+.strength{height:3px;border-radius:99px;margin-top:6px;transition:.3s}
+.strength.s1{width:25%;background:var(--red)}
+.strength.s2{width:55%;background:var(--amber)}
+.strength.s3{width:100%;background:var(--teal)}
+.check-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--dim);margin-bottom:8px}
+.check-row input[type=checkbox]{accent-color:var(--violet);width:15px;height:15px}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="navin">
+<div class="brand"><span class="logo">◉</span> Sub-Share</div>
+<div class="nl" id="nl">
+<a data-p="browse">Browse</a>
+<a data-p="detail">Listing</a>
+<a data-p="checkout">Checkout</a>
+<a data-p="orders">My Orders</a>
+<a data-p="groups">Groups</a>
+<a data-p="wish">Wishlist</a>
+<a data-p="notif">Notifications</a>
+<span class="sep"></span>
+<a data-p="earn">Seller</a>
+<span class="sep"></span>
+<a data-p="adminord">Admin Orders</a>
+<a data-p="adminan">Analytics</a>
+<span class="sep"></span>
+<a data-p="login" class="on">Login</a>
+<a data-p="register">Register</a>
+<a data-p="logout">Logout</a>
+</div>
+
+<button class="btn p">List a slot</button>
+</div></nav>
+
+<div class="wrap">
+
+<!-- ============ BROWSE ============ -->
+<section class="page" id="p-browse">
+<div class="hd"><div class="k">Feature 1 &middot; Buyer</div><h1>Browse subscription slots</h1><p>Search, filter by category and price, sort by price or rating. This is the only page that must work before anything else does.</p></div>
+<div class="sb"><span class="fno">F1</span><b>reads</b><span class="t r">Listings</span><span class="t r">Platforms</span><span class="t r">Categories</span><span class="t r">Users</span><span class="t r">Reviews</span><b>writes</b><span class="t">none</span></div>
+<div class="row sp" style="margin-bottom:18px">
+<input class="inp" style="flex:1;min-width:240px" placeholder="Search platform or plan name...">
+<select class="inp" style="width:auto"><option>Sort: Price low to high</option><option>Price high to low</option><option>Rating high to low</option><option>Newest first</option></select>
+</div>
+<div class="pills"><span class="pill on">All</span><span class="pill">Streaming</span><span class="pill">Music</span><span class="pill">Design</span><span class="pill">AI Tools</span><span class="pill">Education</span></div>
+<div class="two">
+<div class="card">
+<div style="font-weight:700;margin-bottom:13px;font-size:14px">Filters</div>
+<div class="mut2" style="margin-bottom:6px">Category</div>
+<div style="margin-bottom:16px"><label class="mut" style="display:block"><input type="checkbox" checked> Streaming</label><label class="mut" style="display:block"><input type="checkbox"> Music</label><label class="mut" style="display:block"><input type="checkbox"> Design</label><label class="mut" style="display:block"><input type="checkbox"> AI Tools</label></div>
+<div class="mut2" style="margin-bottom:6px">Max price per slot</div>
+<input type="range" style="width:100%" value="60"><div class="row sp mut2"><span>৳ 50</span><span class="num">৳ 600</span></div>
+<div class="mut2" style="margin:16px 0 6px">Billing cycle</div>
+<div><label class="mut" style="display:block"><input type="radio" name="bc" checked> Monthly</label><label class="mut" style="display:block"><input type="radio" name="bc"> Quarterly</label><label class="mut" style="display:block"><input type="radio" name="bc"> Yearly</label></div>
+<div class="mut2" style="margin:16px 0 6px">Availability</div>
+<label class="mut" style="display:block"><input type="checkbox" checked> Has open slots</label>
+<label class="mut" style="display:block"><input type="checkbox"> Region: Bangladesh</label>
+<div class="mut2" style="margin-top:14px;border-top:1px solid var(--line);padding-top:11px">Every control here is one <span class="num">WHERE</span> clause on <span class="num">Listings</span>.</div>
+</div>
+<div>
+<div class="mut" style="margin-bottom:11px">Showing <b style="color:var(--txt)">6</b> of 24 active listings</div>
+<div class="grid">
+<div class="card hov" onclick="go('detail')" style="cursor:pointer"><div class="strip" style="background:#e50914"></div>
+<div class="row sp"><div style="font-weight:700">Netflix</div><span class="tag appr">Active</span></div>
+<div class="mut2">Premium 4K &middot; Bangladesh</div>
+<div class="bar"><i style="width:50%"></i></div><div class="row sp"><span class="mut2">2 of 4 slots open</span><span class="mut2">★ 4.8 (23)</span></div>
+<div class="row sp" style="margin-top:11px"><span class="num" style="font-size:19px">৳ 320</span><span class="mut2">/ month</span></div></div>
+<div class="card hov" style="cursor:pointer"><div class="strip" style="background:#1db954"></div>
+<div class="row sp"><div style="font-weight:700">Spotify</div><span class="tag appr">Active</span></div>
+<div class="mut2">Family &middot; Bangladesh</div>
+<div class="bar"><i style="width:83%"></i></div><div class="row sp"><span class="mut2">1 of 6 slots open</span><span class="mut2">★ 4.6 (41)</span></div>
+<div class="row sp" style="margin-top:11px"><span class="num" style="font-size:19px">৳ 145</span><span class="mut2">/ month</span></div></div>
+<div class="card hov" style="cursor:pointer"><div class="strip" style="background:#ff0000"></div>
+<div class="row sp"><div style="font-weight:700">YouTube Premium</div><span class="tag appr">Active</span></div>
+<div class="mut2">Family &middot; India</div>
+<div class="bar"><i style="width:60%"></i></div><div class="row sp"><span class="mut2">2 of 5 slots open</span><span class="mut2">★ 4.9 (17)</span></div>
+<div class="row sp" style="margin-top:11px"><span class="num" style="font-size:19px">৳ 180</span><span class="mut2">/ month</span></div></div>
+<div class="card hov" style="cursor:pointer"><div class="strip" style="background:#00c4cc"></div>
+<div class="row sp"><div style="font-weight:700">Canva Pro</div><span class="tag appr">Active</span></div>
+<div class="mut2">Teams &middot; Global</div>
+<div class="bar"><i style="width:20%"></i></div><div class="row sp"><span class="mut2">4 of 5 slots open</span><span class="mut2">★ 4.4 (9)</span></div>
+<div class="row sp" style="margin-top:11px"><span class="num" style="font-size:19px">৳ 210</span><span class="mut2">/ month</span></div></div>
+<div class="card hov" style="cursor:pointer"><div class="strip" style="background:#10a37f"></div>
+<div class="row sp"><div style="font-weight:700">ChatGPT Plus</div><span class="tag pend">Paused</span></div>
+<div class="mut2">Team &middot; Global</div>
+<div class="bar"><i style="width:100%"></i></div><div class="row sp"><span class="mut2">0 of 3 slots open</span><span class="mut2">★ 5.0 (6)</span></div>
+<div class="row sp" style="margin-top:11px"><span class="num" style="font-size:19px">৳ 590</span><span class="mut2">/ month</span></div></div>
+<div class="card hov" style="cursor:pointer"><div class="strip" style="background:#ff2d55"></div>
+<div class="row sp"><div style="font-weight:700">Adobe CC</div><span class="tag appr">Active</span></div>
+<div class="mut2">All Apps &middot; Bangladesh</div>
+<div class="bar"><i style="width:50%"></i></div><div class="row sp"><span class="mut2">1 of 2 slots open</span><span class="mut2">★ 4.2 (12)</span></div>
+<div class="row sp" style="margin-top:11px"><span class="num" style="font-size:19px">৳ 480</span><span class="mut2">/ quarter</span></div></div>
+</div>
+
+</div>
+</div>
+</section>
+
+<!-- ============ LISTING DETAIL ============ -->
+<section class="page" id="p-detail">
+<div class="hd"><div class="k">Features 2, 5, 7 &middot; Buyer</div><h1>Netflix Premium 4K</h1><p class="mut">Listed by Rafiul H. &middot; Bangladesh &middot; expires 12 Dec 2026</p></div>
+<div class="sb"><span class="fno">F2</span><span class="fno">F5</span><span class="fno">F7</span><b>reads</b><span class="t r">Listings</span><span class="t r">Platforms</span><span class="t r">Users</span><span class="t r">Reviews</span><span class="t r">SharedGroups</span><span class="t r">GroupMembers</span><b>writes</b><span class="t w">Wishlist</span><span class="t w">GroupMembers</span></div>
+<div class="two rev">
+<div>
+<div class="card"><div class="strip" style="background:#e50914"></div>
+<div class="row sp"><div><div style="font-weight:700;font-size:17px">Netflix &middot; Premium 4K</div><div class="mut2">Category: Streaming &middot; Billing: monthly</div></div><span class="tag appr">Active</span></div>
+<p class="mut" style="margin-top:13px">Original family plan, 4 screens, UHD. Slots are billed monthly and renew on the 1st. Payment via bKash or Nagad, confirmed manually by the seller.</p>
+<div class="sect" style="margin:20px 0 9px">Slot map</div>
+<div class="row" style="gap:7px"><span class="slot f">1</span><span class="slot f">2</span><span class="slot">3</span><span class="slot">4</span><span class="mut2" style="margin-left:7px">2 taken &middot; 2 open</span></div>
+<div class="bar" style="margin-top:14px"><i style="width:50%"></i></div>
+<div class="mut2">available_slots 2 / total_slots 4</div>
+</div>
+<div class="sect">Shared group for this listing &mdash; Feature 5</div>
+<div class="card"><div class="row sp"><div><div style="font-weight:700">Netflix Dhaka Squad</div><div class="mut2">3 of 4 members &middot; created 02 Aug 2026</div></div><button class="btn p">Join group</button></div>
+<div class="bar"><i style="width:75%"></i></div>
+<div class="mut2">Joining writes one row into <span class="num">GroupMembers(group_id, user_id)</span> &mdash; that pair is the composite primary key, so nobody can join twice.</div>
+</div>
+<div class="sect">Reviews &mdash; Feature 2</div>
+<div class="card" style="margin-bottom:11px"><div class="row sp"><b>Tanvir A.</b><span class="mut2">★★★★★ &middot; 14 Aug 2026</span></div><p class="mut">Seller added me within an hour. No password changes so far. Would buy again.</p></div>
+<div class="card" style="margin-bottom:11px"><div class="row sp"><b>Nusrat J.</b><span class="mut2">★★★★☆ &middot; 09 Aug 2026</span></div><p class="mut">Good value. Took two days to get the invite though.</p></div>
+<div class="card"><div class="row sp"><b>Sabbir R.</b><span class="mut2">★★★★★ &middot; 28 Jul 2026</span></div><p class="mut">Smooth. Renewal reminder came through the notification bell.</p></div>
+
+<div class="sect">Related listings</div>
+<div class="grid">
+<div class="card hov"><div class="strip" style="background:#1db954"></div><b>Spotify Family</b><div class="mut2">1 slot open</div><div class="num" style="margin-top:7px">৳ 145</div></div>
+<div class="card hov"><div class="strip" style="background:#ff0000"></div><b>YouTube Premium</b><div class="mut2">2 slots open</div><div class="num" style="margin-top:7px">৳ 180</div></div>
+</div>
+</div>
+<div>
+<div class="card" style="position:sticky;top:78px">
+<div class="row sp"><span class="num" style="font-size:29px">৳ 320</span><span class="mut2">/ slot / month</span></div>
+<div class="mut2" style="margin-bottom:14px">vs ৳ 1,290 solo &mdash; save 75%</div>
+<div class="mut2">Slots to buy</div>
+<select class="inp" style="margin-bottom:11px"><option>1 slot</option><option>2 slots</option></select>
+<button class="btn p" style="width:100%;padding:12px;margin-bottom:9px" onclick="go('checkout')">Buy slot</button>
+<button class="btn" style="width:100%;padding:12px">♡ Save to wishlist</button>
+<div class="mut2" style="margin-top:13px;border-top:1px solid var(--line);padding-top:12px">Heart writes to <span class="num">Wishlist(user_id, listing_id)</span> &mdash; composite PK, so saving twice is impossible.</div>
+<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+<div class="mut2" style="margin-bottom:7px">Seller</div>
+<div class="row"><div class="logo" style="width:37px;height:37px;border-radius:99px;font-size:14px">RH</div><div><b>Rafiul H.</b><div class="mut2">★ 4.8 &middot; 23 reviews &middot; 6 listings</div></div></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ CHECKOUT ============ -->
+<section class="page" id="p-checkout">
+<div class="hd"><div class="k">Features 3 + 4 &middot; Buyer</div><h1>Checkout</h1><p>Apply a coupon, then place the order. The order lands as <span class="num">Pending</span> and waits for the seller or admin.</p></div>
+<div class="sb"><span class="fno">F3</span><span class="fno">F4</span><b>reads</b><span class="t r">Listings</span><span class="t r">Coupons</span><b>writes</b><span class="t w">Orders</span><span class="t w">Coupons.times_used</span><span class="t w">Notifications</span></div>
+<div class="two rev">
+<div>
+<div class="card" style="margin-bottom:15px">
+<div class="step on"><i>1</i> Confirm slot</div><div class="step on"><i>2</i> Apply coupon</div><div class="step"><i>3</i> Payment reference</div><div class="step"><i>4</i> Order placed</div>
+</div>
+<div class="card" style="margin-bottom:15px">
+<div style="font-weight:700;margin-bottom:11px">Coupon code &mdash; Feature 4</div>
+<div class="row"><input class="inp" style="flex:1" value="EIDSALE20"><button class="btn p">Apply</button></div>
+<div class="mut" style="margin-top:11px;color:var(--teal)">✓ EIDSALE20 applied &mdash; 20% off, valid until 30 Sep 2026</div>
+<div class="mut2" style="margin-top:9px">Validation runs three checks before accepting: <span class="num">valid_until &gt;= CURDATE()</span>, <span class="num">times_used &lt; usage_limit</span>, and the code exists.</div>
+</div>
+<div class="card">
+<div style="font-weight:700;margin-bottom:11px">Payment reference</div>
+<div class="row"><select class="inp" style="width:auto"><option>bKash</option><option>Nagad</option><option>Rocket</option></select><input class="inp" style="flex:1" placeholder="Transaction ID e.g. 8A7B2C91"></div>
+<div class="mut2" style="margin-top:10px">Stored as <span class="num">Orders.payment_ref</span> with <span class="num">payment_status = 'unpaid'</span> until the seller confirms. There is no Payments table &mdash; we folded those two columns onto Orders.</div>
+</div>
+</div>
+<div>
+<div class="card" style="position:sticky;top:78px">
+<div style="font-weight:700;margin-bottom:13px">Order summary</div>
+<div class="row sp mut"><span>Netflix Premium 4K</span><span class="num">৳ 320</span></div>
+<div class="row sp mut"><span>Slots</span><span class="num">× 1</span></div>
+<div class="row sp mut" style="color:var(--teal)"><span>Coupon EIDSALE20</span><span class="num">- ৳ 64</span></div>
+<div class="row sp" style="border-top:1px solid var(--line);margin-top:11px;padding-top:11px;font-weight:700"><span>Total</span><span class="num" style="font-size:21px">৳ 256</span></div>
+<button class="btn p" style="width:100%;padding:12px;margin-top:15px" onclick="go('orders')">Place order</button>
+<div class="mut2" style="margin-top:12px">This button is the transaction we demo: insert into <span class="num">Orders</span>, increment <span class="num">Coupons.times_used</span>, insert into <span class="num">Notifications</span>. All three commit together or none do.</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ MY ORDERS ============ -->
+<section class="page" id="p-orders">
+<div class="hd"><div class="k">Feature 3 &middot; Buyer</div><h1>My orders</h1><p>Order history with live status, plus the full status trail for each order.</p></div>
+<div class="sb"><span class="fno">F3</span><b>reads</b><span class="t r">Orders</span><span class="t r">OrderStatusHistory</span><span class="t r">Listings</span><span class="t r">Coupons</span><b>writes</b><span class="t">none</span></div>
+<div class="stats">
+<div class="stat"><div class="v">7</div><div class="l">Total orders</div></div>
+<div class="stat"><div class="v" style="color:var(--teal)">4</div><div class="l">Approved</div></div>
+<div class="stat"><div class="v" style="color:var(--amber)">2</div><div class="l">Pending</div></div>
+<div class="stat"><div class="v">৳ 1,842</div><div class="l">Spent</div></div>
+</div>
+<div class="pills"><span class="pill on">All</span><span class="pill">Pending</span><span class="pill">Approved</span><span class="pill">Rejected</span></div>
+<div class="card" style="padding:0;overflow:hidden">
+<table>
+<tr><th>Order</th><th>Listing</th><th>Slots</th><th>Coupon</th><th>Total</th><th>Payment</th><th>Status</th></tr>
+<tr><td class="num">#1041</td><td><b>Netflix Premium 4K</b></td><td class="num">1</td><td class="num">EIDSALE20</td><td class="num">৳ 256</td><td><span class="tag pend">Unpaid</span></td><td><span class="tag pend">Pending</span></td></tr>
+<tr><td class="num">#1038</td><td><b>Spotify Family</b></td><td class="num">1</td><td class="mut2">&mdash;</td><td class="num">৳ 145</td><td><span class="tag paid">Paid</span></td><td><span class="tag appr">Approved</span></td></tr>
+<tr><td class="num">#1030</td><td><b>Canva Pro Teams</b></td><td class="num">2</td><td class="num">NEW10</td><td class="num">৳ 378</td><td><span class="tag paid">Paid</span></td><td><span class="tag appr">Approved</span></td></tr>
+<tr><td class="num">#1022</td><td><b>Adobe CC All Apps</b></td><td class="num">1</td><td class="mut2">&mdash;</td><td class="num">৳ 480</td><td><span class="tag rej">Refunded</span></td><td><span class="tag rej">Rejected</span></td></tr>
+</table>
+</div>
+<div class="sect">Status trail for order #1022</div>
+<div class="card">
+<div class="step on"><i>1</i> <span>Pending &mdash; placed by buyer &middot; 12 Aug 2026, 21:14</span></div>
+<div class="step on"><i>2</i> <span>Pending &rarr; Rejected by admin_id 3 &middot; 13 Aug 2026, 10:02</span></div>
+<div class="step on"><i>3</i> <span>Reason: &ldquo;Seller could not confirm the payment reference&rdquo;</span></div>
+<div class="mut2" style="margin-top:11px">Every row here is one <span class="num">OrderStatusHistory</span> record with <span class="num">old_status</span>, <span class="num">new_status</span>, <span class="num">admin_id</span>, <span class="num">reason</span>, <span class="num">changed_at</span>. This is why we kept a separate history table instead of just overwriting <span class="num">Orders.status</span>.</div>
+</div>
+</section>
+
+<!-- ============ GROUPS ============ -->
+<section class="page" id="p-groups">
+<div class="hd"><div class="k">Feature 5 &middot; Buyer + Seller</div><h1>Shared groups</h1><p>Groups you have joined and groups you run. Membership is a many-to-many join between users and groups.</p></div>
+<div class="sb"><span class="fno">F5</span><b>reads</b><span class="t r">SharedGroups</span><span class="t r">GroupMembers</span><span class="t r">Users</span><span class="t r">Listings</span><b>writes</b><span class="t w">GroupMembers</span><span class="t w">Notifications</span></div>
+<div class="grid">
+<div class="card"><div class="strip" style="background:#e50914"></div><div class="row sp"><b>Netflix Dhaka Squad</b><span class="tag appr">Member</span></div><div class="mut2">Netflix Premium 4K &middot; max 4</div><div class="bar"><i style="width:75%"></i></div><div class="mut2">3 of 4 members &middot; joined 04 Aug</div><div class="row" style="margin-top:12px;gap:5px"><span class="slot f">RH</span><span class="slot f">ZA</span><span class="slot f">TA</span><span class="slot">+</span></div></div>
+<div class="card"><div class="strip" style="background:#1db954"></div><div class="row sp"><b>Spotify Campus</b><span class="tag appr">Member</span></div><div class="mut2">Spotify Family &middot; max 6</div><div class="bar"><i style="width:100%"></i></div><div class="mut2">6 of 6 members &middot; full</div><div class="row" style="margin-top:12px;gap:5px"><span class="slot f">SZ</span><span class="slot f">MH</span><span class="slot f">ZA</span><span class="slot f">NJ</span><span class="slot f">SR</span><span class="slot f">TA</span></div></div>
+<div class="card"><div class="strip" style="background:#00c4cc"></div><div class="row sp"><b>Canva Design Club</b><span class="tag paid">Owner</span></div><div class="mut2">Canva Pro Teams &middot; max 5</div><div class="bar"><i style="width:40%"></i></div><div class="mut2">2 of 5 members &middot; you created this</div><div class="row" style="margin-top:12px;gap:5px"><span class="slot f">ZA</span><span class="slot f">NJ</span><span class="slot">+</span><span class="slot">+</span><span class="slot">+</span></div></div>
+</div>
+
+</section>
+
+<!-- ============ WISHLIST ============ -->
+<section class="page" id="p-wish">
+<div class="hd"><div class="k">Feature 7 &middot; Buyer</div><h1>Wishlist</h1><p>Saved listings with a live badge when a slot opens up or the price drops.</p></div>
+<div class="sb"><span class="fno">F7</span><b>reads</b><span class="t r">Wishlist</span><span class="t r">Listings</span><span class="t r">Platforms</span><b>writes</b><span class="t w">Wishlist</span></div>
+<div class="grid">
+<div class="card hov"><div class="strip" style="background:#10a37f"></div><div class="row sp"><b>ChatGPT Plus Team</b><button class="btn" style="padding:4px 9px;font-size:12px">&#10005;</button></div><div class="mut2">Saved 18 Aug &middot; ৳ 590</div><div class="bar"><i style="width:100%"></i></div><div class="mut2" style="color:var(--red)">0 slots open &mdash; we will notify you</div></div>
+<div class="card hov"><div class="strip" style="background:#ff2d55"></div><div class="row sp"><b>Adobe CC All Apps</b><button class="btn" style="padding:4px 9px;font-size:12px">&#10005;</button></div><div class="mut2">Saved 15 Aug &middot; ৳ 480</div><div class="bar"><i style="width:50%"></i></div><div class="mut2" style="color:var(--teal)">1 slot just opened</div></div>
+<div class="card hov"><div class="strip" style="background:#ff0000"></div><div class="row sp"><b>YouTube Premium</b><button class="btn" style="padding:4px 9px;font-size:12px">&#10005;</button></div><div class="mut2">Saved 11 Aug &middot; ৳ 180</div><div class="bar"><i style="width:60%"></i></div><div class="mut2" style="color:var(--teal)">2 slots open</div></div>
+</div>
+
+</section>
+
+<!-- ============ NOTIFICATIONS ============ -->
+<section class="page" id="p-notif">
+<div class="hd"><div class="k">Feature 6 &middot; All roles</div><h1>Notifications</h1><p>The only feature written to by two other features. Nothing writes here directly from a user action.</p></div>
+<div class="sb"><span class="fno">F6</span><b>reads</b><span class="t r">Notifications</span><span class="t r">Users</span><b>writes</b><span class="t w">Notifications.is_read</span></div>
+<div class="row sp" style="margin-bottom:15px"><div class="pills" style="margin:0"><span class="pill on">All (5)</span><span class="pill">Unread (3)</span></div><button class="btn">Mark all read</button></div>
+<div class="card" style="padding:0;overflow:hidden">
+<div style="padding:14px 17px;border-bottom:1px solid var(--line);border-left:3px solid var(--violet)"><div class="row sp"><b>Order #1038 approved</b><span class="mut2">2 min ago</span></div><div class="mut">Your Spotify Family slot is confirmed. The seller will send the invite shortly.</div><div class="mut2" style="margin-top:5px">source: Feature 3 &rarr; order status change</div></div>
+<div style="padding:14px 17px;border-bottom:1px solid var(--line);border-left:3px solid var(--violet)"><div class="row sp"><b>Tanvir joined Canva Design Club</b><span class="mut2">1 hr ago</span></div><div class="mut">Your group now has 2 of 5 members.</div><div class="mut2" style="margin-top:5px">source: Feature 5 &rarr; group join</div></div>
+<div style="padding:14px 17px;border-bottom:1px solid var(--line);border-left:3px solid var(--violet)"><div class="row sp"><b>A slot opened on Adobe CC</b><span class="mut2">5 hr ago</span></div><div class="mut">A listing on your wishlist has availability.</div><div class="mut2" style="margin-top:5px">source: Feature 7 &rarr; wishlist watch</div></div>
+<div style="padding:14px 17px;border-bottom:1px solid var(--line);opacity:.6"><div class="row sp"><b>Order #1022 rejected</b><span class="mut2">8 days ago</span></div><div class="mut">Seller could not confirm the payment reference. Refund processed.</div></div>
+<div style="padding:14px 17px;opacity:.6"><div class="row sp"><b>Welcome to Sub-Share</b><span class="mut2">21 days ago</span></div><div class="mut">Complete your profile to start listing slots.</div></div>
+</div>
+
+</section>
+
+<!-- ============ SELLER ============ -->
+<section class="page" id="p-earn">
+<div class="hd"><div class="k">Feature 8 &middot; Seller</div><h1>Seller dashboard</h1><p>Earnings per listing, plus create and manage your own listings.</p></div>
+<div class="sb"><span class="fno">F8</span><b>reads</b><span class="t r">Orders</span><span class="t r">Listings</span><span class="t r">Platforms</span><span class="t r">Reviews</span><b>writes</b><span class="t w">Listings</span></div>
+<div class="stats">
+<div class="stat"><div class="v" style="color:var(--teal)">৳ 8,420</div><div class="l">Total earnings</div></div>
+<div class="stat"><div class="v">৳ 1,265</div><div class="l">This month</div></div>
+<div class="stat"><div class="v">6</div><div class="l">Active listings</div></div>
+<div class="stat"><div class="v">★ 4.8</div><div class="l">Avg rating</div></div>
+</div>
+<div class="sect">Earnings by month</div>
+<div class="chart" style="margin-bottom:34px">
+<div style="height:38%"><span>Mar</span></div><div style="height:52%"><span>Apr</span></div><div style="height:45%"><span>May</span></div><div style="height:68%"><span>Jun</span></div><div style="height:81%"><span>Jul</span></div><div style="height:97%"><span>Aug</span></div>
+</div>
+<div class="sect">Earnings per listing</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table>
+<tr><th>Listing</th><th>Slots sold</th><th>Approved orders</th><th>Revenue</th><th>Avg rating</th><th>Status</th></tr>
+<tr><td><b>Netflix Premium 4K</b></td><td class="num">14</td><td class="num">14</td><td class="num">৳ 4,480</td><td class="num">4.8</td><td><span class="tag appr">Active</span></td></tr>
+<tr><td><b>Canva Pro Teams</b></td><td class="num">8</td><td class="num">7</td><td class="num">৳ 1,680</td><td class="num">4.4</td><td><span class="tag appr">Active</span></td></tr>
+<tr><td><b>Adobe CC All Apps</b></td><td class="num">5</td><td class="num">4</td><td class="num">৳ 1,920</td><td class="num">4.2</td><td><span class="tag appr">Active</span></td></tr>
+<tr><td><b>ChatGPT Plus Team</b></td><td class="num">1</td><td class="num">1</td><td class="num">৳ 590</td><td class="num">5.0</td><td><span class="tag pend">Paused</span></td></tr>
+</table>
+</div>
+
+<div class="sect">Create a listing</div>
+<div class="card">
+<div class="step on"><i>1</i> Pick platform</div><div class="step on"><i>2</i> Plan, slots and price</div><div class="step"><i>3</i> Description and expiry</div><div class="step"><i>4</i> Publish</div>
+<div class="row" style="margin-top:16px">
+<select class="inp" style="flex:1;min-width:150px"><option>Netflix</option><option>Spotify</option><option>Canva Pro</option></select>
+<input class="inp" style="flex:1;min-width:150px" placeholder="Plan name e.g. Premium 4K">
+</div>
+<div class="row" style="margin-top:11px">
+<input class="inp" style="flex:1" placeholder="Total slots" value="4">
+<input class="inp" style="flex:1" placeholder="Price per slot" value="320">
+<select class="inp" style="flex:1"><option>monthly</option><option>quarterly</option><option>yearly</option></select>
+</div>
+<div class="mut2" style="margin-top:11px">On publish, <span class="num">available_slots</span> is set equal to <span class="num">total_slots</span> and <span class="num">status</span> to <span class="num">'active'</span>. Every approved order decrements <span class="num">available_slots</span>. Do not compute it on the fly &mdash; store it, or Browse gets slow.</div>
+</div>
+</section>
+
+<!-- ============ ADMIN ORDERS ============ -->
+<section class="page" id="p-adminord">
+<div class="hd"><div class="k">Feature 3 &middot; Admin</div><h1>Order moderation</h1><p>Approve or reject pending orders. Every decision writes a history row, never an in-place overwrite.</p></div>
+<div class="sb"><span class="fno">F3</span><b>reads</b><span class="t r">Orders</span><span class="t r">Users</span><span class="t r">Listings</span><b>writes</b><span class="t w">Orders.status</span><span class="t w">OrderStatusHistory</span><span class="t w">Listings.available_slots</span><span class="t w">Notifications</span></div>
+<div class="pills"><span class="pill on">Pending (2)</span><span class="pill">Approved</span><span class="pill">Rejected</span><span class="pill">All</span></div>
+<div class="card" style="padding:0;overflow:hidden">
+<table>
+<tr><th>Order</th><th>Buyer</th><th>Listing</th><th>Payment ref</th><th>Total</th><th>Placed</th><th>Action</th></tr>
+<tr><td class="num">#1041</td><td><b>Zaynul A. M.</b></td><td>Netflix Premium 4K</td><td class="num">8A7B2C91</td><td class="num">৳ 256</td><td class="mut2">2 min ago</td><td><button class="btn p" style="padding:5px 11px;font-size:12px">Approve</button> <button class="btn" style="padding:5px 11px;font-size:12px">Reject</button></td></tr>
+<tr><td class="num">#1040</td><td><b>Hamim I. S.</b></td><td>Canva Pro Teams</td><td class="num">7F1D4E22</td><td class="num">৳ 210</td><td class="mut2">1 hr ago</td><td><button class="btn p" style="padding:5px 11px;font-size:12px">Approve</button> <button class="btn" style="padding:5px 11px;font-size:12px">Reject</button></td></tr>
+<tr style="opacity:.55"><td class="num">#1038</td><td><b>Zahid S.</b></td><td>Spotify Family</td><td class="num">2C9A0B77</td><td class="num">৳ 145</td><td class="mut2">yesterday</td><td><span class="tag appr">Approved</span></td></tr>
+<tr style="opacity:.55"><td class="num">#1022</td><td><b>Nusrat J.</b></td><td>Adobe CC All Apps</td><td class="num">&mdash;</td><td class="num">৳ 480</td><td class="mut2">12 Aug</td><td><span class="tag rej">Rejected</span></td></tr>
+</table>
+</div>
+
+</section>
+
+<!-- ============ ADMIN ANALYTICS ============ -->
+<section class="page" id="p-adminan">
+<div class="hd"><div class="k">Feature 9 &middot; Admin</div><h1>Platform analytics</h1><p>Every number on this page is an aggregate. No page in the app has more GROUP BY per square inch.</p></div>
+<div class="sb"><span class="fno">F9</span><b>reads</b><span class="t r">Orders</span><span class="t r">Listings</span><span class="t r">Platforms</span><span class="t r">Categories</span><span class="t r">Users</span><span class="t r">Coupons</span><b>writes</b><span class="t">none</span></div>
+<div class="stats">
+<div class="stat"><div class="v">৳ 42,180</div><div class="l">Gross revenue</div></div>
+<div class="stat"><div class="v">186</div><div class="l">Orders</div></div>
+<div class="stat"><div class="v">74</div><div class="l">Active users</div></div>
+<div class="stat"><div class="v" style="color:var(--amber)">11%</div><div class="l">Rejection rate</div></div>
+</div>
+<div class="sect">Revenue by category</div>
+<div class="chart" style="margin-bottom:34px">
+<div style="height:95%"><span>Streaming</span></div><div style="height:58%"><span>AI Tools</span></div><div style="height:44%"><span>Design</span></div><div style="height:31%"><span>Music</span></div><div style="height:17%"><span>Education</span></div>
+</div>
+<div class="two" style="grid-template-columns:1fr 1fr">
+<div><div class="sect" style="margin-top:0">Most popular platforms</div>
+<div class="card" style="padding:0;overflow:hidden"><table>
+<tr><th>Platform</th><th>Orders</th><th>Revenue</th></tr>
+<tr><td><b>Netflix</b></td><td class="num">62</td><td class="num">৳ 18,240</td></tr>
+<tr><td><b>Spotify</b></td><td class="num">41</td><td class="num">৳ 5,945</td></tr>
+<tr><td><b>Canva Pro</b></td><td class="num">33</td><td class="num">৳ 6,930</td></tr>
+<tr><td><b>ChatGPT Plus</b></td><td class="num">28</td><td class="num">৳ 8,260</td></tr>
+</table></div></div>
+<div><div class="sect" style="margin-top:0">Coupon usage</div>
+<div class="card" style="padding:0;overflow:hidden"><table>
+<tr><th>Code</th><th>Used / limit</th><th>Discount</th><th>Expires</th></tr>
+<tr><td class="num">EIDSALE20</td><td class="num">41 / 100</td><td class="num">20%</td><td class="mut2">30 Sep</td></tr>
+<tr><td class="num">NEW10</td><td class="num">100 / 100</td><td class="num">10%</td><td class="mut2">expired</td></tr>
+<tr><td class="num">BOISHAKH15</td><td class="num">12 / 50</td><td class="num">15%</td><td class="mut2">14 Apr</td></tr>
+</table></div></div>
+</div>
+
+<div class="banner">
+<div class="serif" style="font-size:25px;margin-bottom:7px">12 tables. 9 features. 13 screens.</div>
+<p class="mut" style="max-width:520px;margin:0 auto">Sub-Share &mdash; CSE370 group project, Group 10, Lab Section 03. Layout mockup only. No JavaScript logic, no backend, no real data.</p>
+</div>
+</section>
+
+<!-- ============ REGISTER ============ -->
+<section class="page" id="p-register">
+    <div class="auth-wrap" style="max-width:480px">
+        <div style="text-align:center;margin-bottom:28px">
+            <div class="auth-logo">◉</div>
+            <h1 style="font-size:28px;margin-bottom:6px">Create an account</h1>
+            <p class="mut">Join Sub-Share and start sharing subscriptions</p>
+        </div>
+        <div class="sb"><span class="fno">Auth</span><b>reads</b><span class="t r">Users</span><b>writes</b><span class="t w">Users</span><span class="t w">Notifications</span></div>
+        <div class="card">
+            <div class="sect" style="margin:0 0 13px">I want to join as</div>
+            <div class="role-grid" id="roleGrid">
+                <div class="role-card sel" onclick="selRole(this)">
+                    <div class="ri">🛒</div>
+                    <div class="rl">Buyer</div>
+                    <div class="rd">Browse and join subscription slots</div>
+                </div>
+                <div class="role-card" onclick="selRole(this)">
+                    <div class="ri">💰</div>
+                    <div class="rl">Seller</div>
+                    <div class="rd">List your plan slots and earn</div>
+                </div>
+            </div>
+            <div class="row" style="gap:11px;margin-bottom:0">
+                <div class="inp-group" style="flex:1">
+                    <label>First name</label>
+                    <input class="inp" placeholder="Cristiano">
+                </div>
+                <div class="inp-group" style="flex:1">
+                    <label>Last name</label>
+                    <input class="inp" placeholder="Ronaldo">
+                </div>
+            </div>
+            <div class="inp-group">
+                <label>Email address</label>
+                <input class="inp" type="email" placeholder="you@example.com">
+            </div>
+            <div class="inp-group">
+                <label>Password</label>
+                <div class="pw-wrap">
+                    <input class="inp" type="password" id="rp" placeholder="At least 8 characters" oninput="pwStrength(this)">
+                    <button class="pw-eye" onclick="togglePw('rp',this)">👁</button>
+                </div>
+                <div class="strength" id="strengthBar"></div>
+                <div class="mut2" id="strengthLbl" style="margin-top:4px"></div>
+            </div>
+            <div class="inp-group">
+                <label>Confirm password</label>
+                <div class="pw-wrap">
+                    <input class="inp" type="password" id="rp2" placeholder="Repeat password">
+                    <button class="pw-eye" onclick="togglePw('rp2',this)">👁</button>
+                </div>
+            </div>
+            <div class="check-row"><input type="checkbox" id="tos"><label for="tos" style="cursor:pointer">I agree to the <a style="color:var(--violet)">Terms of Service</a> and <a style="color:var(--violet)">Privacy Policy</a></label></div>
+            <div class="check-row" style="margin-bottom:20px"><input type="checkbox" id="mkt"><label for="mkt" style="cursor:pointer">Send me tips and platform updates</label></div>
+            <button class="btn p" style="width:100%;padding:13px;font-size:15px" onclick="go('login')">Create account</button>
+            
+        </div>
+        <div style="text-align:center;margin-top:18px;font-size:13.5px;color:var(--dim)">Already have an account? <a onclick="go('login')" style="color:var(--violet);cursor:pointer;font-weight:600">Sign in</a></div>
+        <!--  -->
+    </div>
+</section>
+
+<!-- ============ LOGIN ============ -->
+<section class="page on" id="p-login">
+    <div class="auth-wrap">
+        <div style="text-align:center;margin-bottom:28px">
+            <div class="auth-logo">◉</div>
+            <h1 style="font-size:28px;margin-bottom:6px">Welcome back</h1>
+            <p class="mut">Sign in to your Sub-Share account</p>
+        </div>
+        <div class="sb"><span class="fno">Auth</span><b>reads</b><span class="t r">Users</span><b>writes</b><span class="t">none</span></div>
+        <div class="card">
+            <div class="inp-group">
+                <label>Email address</label>
+                <input class="inp" type="email" placeholder="you@example.com">
+            </div>
+            <div class="inp-group">
+                <div class="row sp" style="margin-bottom:6px">
+                    <label style="font-size:12.5px;color:var(--dim2);font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin:0">Password</label>
+                    <a style="font-size:12.5px;color:var(--violet);cursor:pointer;font-weight:500">Forgot password?</a>
+                </div>
+                <div class="pw-wrap">
+                    <input class="inp" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" id="lp">
+                    <button class="pw-eye" onclick="togglePw('lp',this)">👁</button>
+                </div>
+            </div>
+            
+            <button class="btn p" style="width:100%;padding:13px;font-size:15px" onclick="go('browse')">Sign in</button>
+            
+            
+        </div>
+        <div style="text-align:center;margin-top:18px;font-size:13.5px;color:var(--dim)">Don't have an account? <a onclick="go('register')" style="color:var(--violet);cursor:pointer;font-weight:600">Create one free</a></div>
+    </div>
+</section>
+
+<!-- ============ LOGOUT ============ -->
+<section class="page" id="p-logout">
+    <div class="logout-wrap">
+        <div class="logout-icon">👋</div>
+        <h1 style="font-size:27px;margin-bottom:10px">Sign out of Sub-Share?</h1>
+        <p class="mut" style="margin-bottom:30px;font-size:14.5px">You're signed in as <b style="color:var(--txt)">Hamim I. S.</b> &mdash; hamim@bracu.ac.bd</p>
+        <div class="sb"><span class="fno">Auth</span><b>reads</b><span class="t">none</span><b>writes</b><span class="t">none</span></div>
+        <div class="card" style="text-align:left;margin-bottom:20px">
+            <div class="row" style="gap:13px;margin-bottom:13px">
+            <div class="logo" style="width:42px;height:42px;border-radius:99px;flex:none;font-size:16px">HI</div>
+            <div>
+                <div style="font-weight:700">Hamim I. S.</div>
+                <div class="mut2">Buyer &middot; Member since Aug 2026</div>
+                <div class="mut2" style="margin-top:2px">hamim@bracu.ac.bd</div>
+            </div>
+            </div>
+        </div>
+        <div style="display:grid;gap:10px">
+            <button class="btn danger" style="width:100%;padding:13px;font-size:15px" onclick="go('login')">Yes, sign me out</button>
+            <button class="btn" style="width:100%;padding:13px" onclick="go('browse')">Cancel &mdash; take me back</button>
+        </div>
+    </div>
+</section>
+
+    
+</div>
+<script>
+function go(p){
+ document.querySelectorAll('.page').forEach(function(s){s.classList.remove('on')});
+ var el=document.getElementById('p-'+p); if(el)el.classList.add('on');
+ document.querySelectorAll('#nl a').forEach(function(a){a.classList.toggle('on',a.dataset.p===p)});
+ window.scrollTo(0,0);
+}
+document.querySelectorAll('#nl a').forEach(function(a){a.addEventListener('click',function(){go(a.dataset.p)})});
+function togglePw(id,btn){
+ var inp=document.getElementById(id);
+ if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}else{inp.type='password';btn.textContent='👁';}
+}
+function pwStrength(inp){
+ var v=inp.value,bar=document.getElementById('strengthBar'),lbl=document.getElementById('strengthLbl');
+ if(!v){bar.className='strength';lbl.textContent='';return;}
+ if(v.length<6){bar.className='strength s1';lbl.textContent='Weak';lbl.style.color='var(--red)';return;}
+ if(v.length<10||!/[^a-zA-Z0-9]/.test(v)){bar.className='strength s2';lbl.textContent='Fair';lbl.style.color='var(--amber)';return;}
+ bar.className='strength s3';lbl.textContent='Strong';lbl.style.color='var(--teal)';
+}
+function selRole(el){
+ document.querySelectorAll('.role-card').forEach(function(c){c.classList.remove('sel')});
+ el.classList.add('sel');
+}
+
+/* Open on the login screen. #browse, #register etc work as deep links. */
+(function(){var p=(location.hash||'').replace('#','');
+ go(document.getElementById('p-'+p)?p:'login');})();
+</script>
+</body>
+</html>
