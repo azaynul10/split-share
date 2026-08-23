@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}{{ listing.plan_name }} · {{ listing.platform_name }} · Sub-Share{% endblock %}
+
+{% block content %}
+<nav class="mb-6 flex items-center gap-2 text-sm text-slate-500">
+    <a href="{% url 'browse' %}" class="transition hover:text-indigo-600">Browse</a>
+    <span>/</span>
+    <a href="{% url 'browse' %}?category={{ listing.category_id }}" class="transition hover:text-indigo-600">{{ listing.category_name }}</a>
+    <span>/</span>
+    <span class="truncate font-medium text-slate-700">{{ listing.platform_name }}</span>
+</nav>
+
+<div class="lg:grid lg:grid-cols-3 lg:gap-8">
+
+    <!-- ================= Main column ================= -->
+    <div class="space-y-6 lg:col-span-2">
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="flex min-w-0 items-center gap-4">
+                    <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-lg font-extrabold text-white"
+                          data-bg="{{ listing.brand_color|default:'#4f46e5' }}">
+                        {{ listing.platform_name|slice:":1"|upper }}
+                    </span>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-slate-500">{{ listing.platform_name }}</p>
+                        <h1 class="mt-0.5 text-2xl font-extrabold leading-tight tracking-tight">{{ listing.plan_name }}</h1>
+                    </div>
+                </div>
+
+                {% if current_user.is_authenticated %}
+                    <form method="post"
+                          action="{% if in_wishlist %}{% url 'wishlist_remove' listing.listing_id %}{% else %}{% url 'wishlist_add' listing.listing_id %}{% endif %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit"
+                                class="flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition
+                                       {% if in_wishlist %}border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100{% else %}border-slate-200 text-slate-600 hover:border-rose-200 hover:text-rose-600{% endif %}">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                 fill="{% if in_wishlist %}currentColor{% else %}none{% endif %}">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.098 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+                            </svg>
+                            {% if in_wishlist %}Saved{% else %}Save{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                {% if listing.review_count %}
+                    <span class="flex items-center gap-1.5">
+                        <span class="flex">
+                            {% for star in star_range %}
+                                <svg class="h-4 w-4 {% if star <= listing.avg_rating %}text-amber-400{% else %}text-slate-200{% endif %}" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z"/>
+                                </svg>
+                            {% endfor %}
+                        </span>
+                        <span class="font-bold">{{ listing.avg_rating|floatformat:1 }}</span>
+                        <span class="text-slate-500">({{ listing.review_count }} review{{ listing.review_count|pluralize }})</span>
+                    </span>
+                {% else %}
+                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">No reviews yet</span>
+                {% endif %}
+
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-600">{{ listing.category_name }}</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-600">{{ listing.region }}</span>
+            </div>
+
+            {% if listing.description %}
+                <p class="mt-6 leading-relaxed text-slate-600">{{ listing.description }}</p>
+            {% endif %}
+
+            <dl class="mt-8 grid grid-cols-2 gap-4 border-t border-slate-100 pt-6 sm:grid-cols-4">
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wide text-slate-400">Total slots</dt>
+                    <dd class="mt-1 text-lg font-bold">{{ listing.total_slots }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wide text-slate-400">Still open</dt>
+                    <dd class="mt-1 text-lg font-bold {% if sold_out %}text-slate-400{% else %}text-emerald-600{% endif %}">
+                        {{ listing.available_slots }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wide text-slate-400">Billing</dt>
+                    <dd class="mt-1 text-lg font-bold capitalize">{{ listing.billing_cycle }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-bold uppercase tracking-wide text-slate-400">Renews until</dt>
+                    <dd class="mt-1 text-lg font-bold">{{ listing.expires_on|date:"j M Y"|default:"—" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Seller -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-400">Listed by</h2>
+            <div class="mt-4 flex items-center gap-4">
+                <span class="grid h-12 w-12 place-items-center rounded-full bg-indigo-100 text-base font-bold text-indigo-700">
+                    {{ listing.seller_name|slice:":1"|upper }}
+                </span>
+                <div>
+                    <p class="font-bold">{{ listing.seller_name }}</p>
+                    <p class="mt-0.5 text-sm text-slate-500">
+                        {{ seller.listing_count }} listing{{ seller.listing_count|pluralize }}
+                        {% if seller.seller_rating %}· {{ seller.seller_rating|floatformat:1 }} average rating{% endif %}
+                        · joined {{ listing.seller_joined|date:"F Y" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+            <h2 class="text-lg font-bold">Reviews</h2>
+
+            {% if listing.review_count %}
+                <div class="mt-6 grid gap-8 sm:grid-cols-[10rem_1fr]">
+                    <div class="text-center sm:text-left">
+                        <p class="text-4xl font-extrabold tracking-tight">{{ listing.avg_rating|floatformat:1 }}</p>
+                        <p class="mt-1 text-sm text-slate-500">{{ listing.review_count }} review{{ listing.review_count|pluralize }}</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        {% for row in breakdown %}
+                            <div class="flex items-center gap-3 text-sm">
+                                <span class="w-10 shrink-0 text-slate-500">{{ row.stars }} star</span>
+                                <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                                    <div class="h-full rounded-full bg-amber-400" data-width="{{ row.percent }}"></div>
+                                </div>
+                                <span class="w-8 shrink-0 text-right text-slate-400">{{ row.votes }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <ul class="mt-8 divide-y divide-slate-100 border-t border-slate-100">
+                    {% for review in reviews %}
+                        <li class="py-5">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                                        {{ review.reviewer_name|slice:":1"|upper }}
+                                    </span>
+                                    <div>
+                                        <p class="text-sm font-semibold">{{ review.reviewer_name }}</p>
+                                        <div class="mt-0.5 flex">
+                                            {% for star in star_range %}
+                                                <svg class="h-3.5 w-3.5 {% if star <= review.rating %}text-amber-400{% else %}text-slate-200{% endif %}" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z"/>
+                                                </svg>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <time class="shrink-0 text-xs text-slate-400">{{ review.created_at|date:"j M Y" }}</time>
+                            </div>
+                            {% if review.comment %}
+                                <p class="mt-3 text-sm leading-relaxed text-slate-600">{{ review.comment }}</p>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="mt-4 text-sm text-slate-500">
+                    This listing has not been reviewed yet. Reviews appear once a buyer's order has been approved.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ================= Sticky price panel ================= -->
+    <aside class="mt-6 lg:mt-0">
+        <div class="lg:sticky lg:top-24">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                <div class="flex items-baseline gap-1.5">
+                    <span class="text-3xl font-extrabold tracking-tight">&#2547;{{ listing.price_per_slot|floatformat:"-2" }}</span>
+                    <span class="text-sm text-slate-500">/ slot / {{ listing.billing_cycle }}</span>
+                </div>
+
+                {% if sold_out %}
+                    <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        Every slot on this plan is taken. Save it and you will be notified when one frees up.
+                    </div>
+                {% else %}
+                    <p class="mt-2 text-sm font-medium text-emerald-600">
+                        {{ listing.available_slots }} of {{ listing.total_slots }} slots still open
+                    </p>
+                {% endif %}
+
+                <div class="mt-6 space-y-4">
+                    <div>
+                        <label for="slots" class="block text-sm font-semibold text-slate-700">How many slots?</label>
+                        <select id="slots"
+                                class="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                                {% if sold_out %}disabled{% endif %}>
+                            {% if sold_out %}
+                                <option value="0">No slots available</option>
+                            {% else %}
+                                {% for count in slot_choices %}
+                                    <option value="{{ count }}">{{ count }} slot{{ count|pluralize }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="coupon-code" class="block text-sm font-semibold text-slate-700">Promo code</label>
+                        <div class="mt-1.5 flex gap-2">
+                            <input type="text" id="coupon-code" placeholder="EIDSALE20" autocomplete="off"
+                                   class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm uppercase outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                                   {% if sold_out %}disabled{% endif %}>
+                            <button type="button" id="coupon-apply"
+                                    class="shrink-0 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                                    {% if sold_out %}disabled{% endif %}>
+                                Apply
+                            </button>
+                        </div>
+                        <p id="coupon-message" class="mt-2 hidden text-xs font-medium"></p>
+                    </div>
+                </div>
+
+                <dl class="mt-6 space-y-2.5 border-t border-slate-100 pt-5 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="text-slate-500">Subtotal</dt>
+                        <dd id="summary-subtotal" class="font-semibold">&#2547;{{ listing.price_per_slot|floatformat:"-2" }}</dd>
+                    </div>
+                    <div id="summary-discount-row" class="hidden justify-between text-emerald-600">
+                        <dt>Discount</dt>
+                        <dd id="summary-discount" class="font-semibold">-&#2547;0.00</dd>
+                    </div>
+                    <div class="flex justify-between border-t border-slate-100 pt-2.5 text-base">
+                        <dt class="font-bold">Total</dt>
+                        <dd id="summary-total" class="font-extrabold">&#2547;{{ listing.price_per_slot|floatformat:"-2" }}</dd>
+                    </div>
+                </dl>
+
+                <button type="button" disabled
+                        class="mt-6 w-full cursor-not-allowed rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">
+                    Continue to checkout
+                </button>
+                <p class="mt-2 text-center text-xs text-slate-400">
+                    Checkout is handled by the order module.
+                </p>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- ================= Related ================= -->
+{% if related %}
+    <section class="mt-12">
+        <h2 class="text-lg font-bold">More in {{ listing.category_name }}</h2>
+        <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {% for item in related %}
+                <a href="{% url 'listing_detail' item.listing_id %}"
+                   class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-extrabold text-white"
+                              data-bg="{{ item.brand_color|default:'#4f46e5' }}">
+                            {{ item.platform_name|slice:":1"|upper }}
+                        </span>
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-bold transition group-hover:text-indigo-600">{{ item.plan_name }}</p>
+                            <p class="truncate text-xs text-slate-500">{{ item.platform_name }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between">
+                        <span class="font-extrabold">&#2547;{{ item.price_per_slot|floatformat:"-2" }}</span>
+                        <span class="text-xs text-slate-500">{{ item.available_slots }} open</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        const unitPrice = Number("{{ listing.price_per_slot }}");
+        const listingId = "{{ listing.listing_id }}";
+        const csrfToken = "{{ csrf_token }}";
+        const validateUrl = "{% url 'validate_coupon' %}";
+
+        const slotsSelect = document.getElementById('slots');
+        const codeInput = document.getElementById('coupon-code');
+        const applyButton = document.getElementById('coupon-apply');
+        const messageEl = document.getElementById('coupon-message');
+        const subtotalEl = document.getElementById('summary-subtotal');
+        const discountRow = document.getElementById('summary-discount-row');
+        const discountEl = document.getElementById('summary-discount');
+        const totalEl = document.getElementById('summary-total');
+
+        const taka = (value) => '\u09F3' + Number(value).toFixed(2);
+
+        function resetSummary() {
+            const slots = Number(slotsSelect ? slotsSelect.value : 1) || 1;
+            const subtotal = unitPrice * slots;
+            subtotalEl.textContent = taka(subtotal);
+            totalEl.textContent = taka(subtotal);
+            discountRow.classList.add('hidden');
+            discountRow.classList.remove('flex');
+        }
+
+        function showMessage(text, ok) {
+            messageEl.textContent = text;
+            messageEl.classList.remove('hidden', 'text-emerald-600', 'text-rose-600');
+            messageEl.classList.add(ok ? 'text-emerald-600' : 'text-rose-600');
+        }
+
+        if (slotsSelect) {
+            slotsSelect.addEventListener('change', function () {
+                resetSummary();
+                if (codeInput && codeInput.value.trim()) {
+                    applyCoupon();
+                }
+            });
+        }
+
+        function applyCoupon() {
+            const code = codeInput.value.trim();
+            if (!code) {
+                showMessage('Enter a promo code.', false);
+                resetSummary();
+                return;
+            }
+
+            const body = new URLSearchParams({
+                code: code,
+                listing_id: listingId,
+                slots: slotsSelect ? slotsSelect.value : '1',
+            });
+
+            applyButton.disabled = true;
+            applyButton.textContent = '…';
+
+            fetch(validateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: body.toString(),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    showMessage(data.message || 'Could not check that code.', !!data.valid);
+
+                    if (data.valid) {
+                        subtotalEl.textContent = taka(data.subtotal);
+                        discountEl.textContent = '-' + taka(data.discount_amount);
+                        totalEl.textContent = taka(data.total);
+                        discountRow.classList.remove('hidden');
+                        discountRow.classList.add('flex');
+                    } else {
+                        resetSummary();
+                    }
+                })
+                .catch(() => {
+                    showMessage('Something went wrong. Please try again.', false);
+                    resetSummary();
+                })
+                .finally(() => {
+                    applyButton.disabled = false;
+                    applyButton.textContent = 'Apply';
+                });
+        }
+
+        if (applyButton) {
+            applyButton.addEventListener('click', applyCoupon);
+        }
+        if (codeInput) {
+            codeInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    applyCoupon();
+                }
+            });
+        }
+    })();
+</script>
+{% endblock %}

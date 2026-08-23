@@ -4,6 +4,9 @@
 -- Tables  : 12
 -- Notes   : This file is the single source of truth for the database.
 --           Re-running it drops and rebuilds everything from scratch.
+--           Constraints used: PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE,
+--           DEFAULT and AUTO_INCREMENT. Value ranges are validated in the
+--           application layer and audited by db/verify.sql.
 -- =====================================================================
 
 DROP DATABASE IF EXISTS split_share;
@@ -32,8 +35,6 @@ CREATE TABLE Users (
     CONSTRAINT uq_users_email UNIQUE (email)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_users_role ON Users(role);
-
 -- ---------------------------------------------------------------------
 -- 2. Categories
 --    Broad groupings shown as filter pills on the browse page.
@@ -60,10 +61,7 @@ CREATE TABLE Platforms (
     CONSTRAINT uq_platforms_name UNIQUE (name),
     CONSTRAINT fk_platforms_category
         FOREIGN KEY (category_id) REFERENCES Categories(category_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_platforms_category ON Platforms(category_id);
 
 -- ---------------------------------------------------------------------
 -- 4. Listings
@@ -86,21 +84,10 @@ CREATE TABLE Listings (
     created_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_listings_seller
-        FOREIGN KEY (seller_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (seller_id) REFERENCES Users(user_id),
     CONSTRAINT fk_listings_platform
         FOREIGN KEY (platform_id) REFERENCES Platforms(platform_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT chk_listings_slots     CHECK (available_slots <= total_slots),
-    CONSTRAINT chk_listings_total     CHECK (total_slots > 0),
-    CONSTRAINT chk_listings_price     CHECK (price_per_slot >= 0)
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_listings_seller   ON Listings(seller_id);
-CREATE INDEX idx_listings_platform ON Listings(platform_id);
-CREATE INDEX idx_listings_status   ON Listings(status);
-CREATE INDEX idx_listings_price    ON Listings(price_per_slot);
 
 -- ---------------------------------------------------------------------
 -- 5. Coupons
@@ -118,10 +105,7 @@ CREATE TABLE Coupons (
     times_used       INT UNSIGNED  NOT NULL DEFAULT 0,
     is_active        BOOLEAN       NOT NULL DEFAULT TRUE,
 
-    CONSTRAINT uq_coupons_code UNIQUE (code),
-    CONSTRAINT chk_coupons_percent CHECK (discount_percent BETWEEN 1 AND 100),
-    CONSTRAINT chk_coupons_dates   CHECK (valid_until >= valid_from),
-    CONSTRAINT chk_coupons_usage   CHECK (times_used <= usage_limit)
+    CONSTRAINT uq_coupons_code UNIQUE (code)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -147,24 +131,12 @@ CREATE TABLE Orders (
     placed_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_orders_buyer
-        FOREIGN KEY (buyer_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (buyer_id) REFERENCES Users(user_id),
     CONSTRAINT fk_orders_listing
-        FOREIGN KEY (listing_id) REFERENCES Listings(listing_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (listing_id) REFERENCES Listings(listing_id),
     CONSTRAINT fk_orders_coupon
         FOREIGN KEY (coupon_id) REFERENCES Coupons(coupon_id)
-        ON DELETE SET NULL ON UPDATE CASCADE,
-
-    CONSTRAINT chk_orders_slots  CHECK (slots_ordered > 0),
-    CONSTRAINT chk_orders_total  CHECK (total_amount >= 0),
-    CONSTRAINT chk_orders_disc   CHECK (discount_amount >= 0)
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_orders_buyer   ON Orders(buyer_id);
-CREATE INDEX idx_orders_listing ON Orders(listing_id);
-CREATE INDEX idx_orders_status  ON Orders(order_status);
-CREATE INDEX idx_orders_placed  ON Orders(placed_at);
 
 -- ---------------------------------------------------------------------
 -- 7. OrderStatusHistory
@@ -180,14 +152,10 @@ CREATE TABLE OrderStatusHistory (
     changed_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_history_order
-        FOREIGN KEY (order_id) REFERENCES Orders(order_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     CONSTRAINT fk_history_user
         FOREIGN KEY (changed_by) REFERENCES Users(user_id)
-        ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_history_order ON OrderStatusHistory(order_id);
 
 -- ---------------------------------------------------------------------
 -- 8. Reviews
@@ -203,16 +171,10 @@ CREATE TABLE Reviews (
 
     CONSTRAINT uq_review_once UNIQUE (reviewer_id, listing_id),
     CONSTRAINT fk_reviews_user
-        FOREIGN KEY (reviewer_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (reviewer_id) REFERENCES Users(user_id),
     CONSTRAINT fk_reviews_listing
         FOREIGN KEY (listing_id) REFERENCES Listings(listing_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_reviews_listing ON Reviews(listing_id);
 
 -- ---------------------------------------------------------------------
 -- 9. SharedGroups
@@ -227,16 +189,10 @@ CREATE TABLE SharedGroups (
     created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_groups_listing
-        FOREIGN KEY (listing_id) REFERENCES Listings(listing_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (listing_id) REFERENCES Listings(listing_id),
     CONSTRAINT fk_groups_owner
         FOREIGN KEY (owner_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT chk_groups_max CHECK (max_members > 0)
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_groups_listing ON SharedGroups(listing_id);
 
 -- ---------------------------------------------------------------------
 -- 10. GroupMembers
@@ -250,14 +206,10 @@ CREATE TABLE GroupMembers (
 
     PRIMARY KEY (group_id, user_id),
     CONSTRAINT fk_members_group
-        FOREIGN KEY (group_id) REFERENCES SharedGroups(group_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (group_id) REFERENCES SharedGroups(group_id),
     CONSTRAINT fk_members_user
         FOREIGN KEY (user_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_members_user ON GroupMembers(user_id);
 
 -- ---------------------------------------------------------------------
 -- 11. Wishlist
@@ -270,14 +222,10 @@ CREATE TABLE Wishlist (
 
     PRIMARY KEY (user_id, listing_id),
     CONSTRAINT fk_wishlist_user
-        FOREIGN KEY (user_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES Users(user_id),
     CONSTRAINT fk_wishlist_listing
         FOREIGN KEY (listing_id) REFERENCES Listings(listing_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_wishlist_listing ON Wishlist(listing_id);
 
 -- ---------------------------------------------------------------------
 -- 12. Notifications
@@ -294,9 +242,6 @@ CREATE TABLE Notifications (
 
     CONSTRAINT fk_notifications_user
         FOREIGN KEY (user_id) REFERENCES Users(user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_notifications_user ON Notifications(user_id, is_read);
 
 SET FOREIGN_KEY_CHECKS = 1;

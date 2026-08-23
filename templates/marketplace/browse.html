@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Browse subscription slots · Sub-Share{% endblock %}
+
+{% block content %}
+<div class="lg:grid lg:grid-cols-[17rem_1fr] lg:gap-8">
+
+    <!-- ================= Filters ================= -->
+    <aside class="mb-6 lg:mb-0">
+        <form method="get" action="{% url 'browse' %}"
+              class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5">
+            <input type="hidden" name="sort" value="{{ filters.sort }}">
+
+            <div class="flex items-center justify-between">
+                <h2 class="font-bold">Filters</h2>
+                {% if has_active_filters %}
+                    <a href="{% url 'browse' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">Clear all</a>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="f-q" class="block text-xs font-bold uppercase tracking-wide text-slate-400">Keyword</label>
+                <input type="search" name="q" id="f-q" value="{{ filters.q }}" placeholder="Netflix, Canva…"
+                       class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+            </div>
+
+            <div>
+                <span class="block text-xs font-bold uppercase tracking-wide text-slate-400">Category</span>
+                <div class="mt-2 space-y-1">
+                    <label class="flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 text-sm transition hover:bg-slate-50">
+                        <span class="flex items-center gap-2">
+                            <input type="radio" name="category" value="" class="h-4 w-4 text-indigo-600"
+                                   {% if not filters.category %}checked{% endif %}>
+                            All categories
+                        </span>
+                    </label>
+                    {% for category in categories %}
+                        <label class="flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 text-sm transition hover:bg-slate-50">
+                            <span class="flex items-center gap-2">
+                                <input type="radio" name="category" value="{{ category.category_id }}" class="h-4 w-4 text-indigo-600"
+                                       {% if filters.category == category.category_id %}checked{% endif %}>
+                                {{ category.name }}
+                            </span>
+                            <span class="text-xs text-slate-400">{{ category.listing_count }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <span class="block text-xs font-bold uppercase tracking-wide text-slate-400">
+                    Price per slot
+                </span>
+                {% if price_bounds.min_price is not None %}
+                    <p class="mt-1 text-xs text-slate-400">
+                        Catalogue range &#2547;{{ price_bounds.min_price|floatformat:"-2" }} – &#2547;{{ price_bounds.max_price|floatformat:"-2" }}
+                    </p>
+                {% endif %}
+                <div class="mt-2 flex items-center gap-2">
+                    <input type="number" name="min_price" value="{{ filters.min_price }}" min="0" step="1" placeholder="Min"
+                           class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                    <span class="text-slate-400">–</span>
+                    <input type="number" name="max_price" value="{{ filters.max_price }}" min="0" step="1" placeholder="Max"
+                           class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                </div>
+            </div>
+
+            <div>
+                <label for="f-cycle" class="block text-xs font-bold uppercase tracking-wide text-slate-400">Billing cycle</label>
+                <select name="cycle" id="f-cycle"
+                        class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm capitalize outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                    <option value="">Any cycle</option>
+                    {% for cycle in billing_cycles %}
+                        <option value="{{ cycle }}" {% if filters.cycle == cycle %}selected{% endif %}>{{ cycle|capfirst }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="f-rating" class="block text-xs font-bold uppercase tracking-wide text-slate-400">Minimum rating</label>
+                <select name="min_rating" id="f-rating"
+                        class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                    <option value="">Any rating</option>
+                    {% for stars in "5432" %}
+                        <option value="{{ stars }}" {% if filters.min_rating|stringformat:"s" == stars %}selected{% endif %}>
+                            {{ stars }} stars and up
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <label class="flex cursor-pointer items-start gap-2.5 rounded-xl bg-slate-50 p-3">
+                <input type="checkbox" name="available" value="1" class="mt-0.5 h-4 w-4 rounded text-indigo-600"
+                       {% if filters.available %}checked{% endif %}>
+                <span class="text-sm">
+                    <span class="font-semibold">Only show open slots</span>
+                    <span class="mt-0.5 block text-xs text-slate-500">Hide listings that are fully booked.</span>
+                </span>
+            </label>
+
+            <button type="submit"
+                    class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                Apply filters
+            </button>
+        </form>
+    </aside>
+
+    <!-- ================= Results ================= -->
+    <section>
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight">
+                    {% if filters.q %}Results for &ldquo;{{ filters.q }}&rdquo;{% else %}Browse subscription slots{% endif %}
+                </h1>
+                <p class="mt-1 text-sm text-slate-500">
+                    {% if total %}
+                        {{ total }} listing{{ total|pluralize }} available
+                        {% if total_pages > 1 %}· page {{ page }} of {{ total_pages }}{% endif %}
+                    {% else %}
+                        Nothing matched your filters
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="get" action="{% url 'browse' %}" class="flex items-center gap-2">
+                <input type="hidden" name="q" value="{{ filters.q }}">
+                <input type="hidden" name="category" value="{{ filters.category|default_if_none:'' }}">
+                <input type="hidden" name="min_price" value="{{ filters.min_price }}">
+                <input type="hidden" name="max_price" value="{{ filters.max_price }}">
+                <input type="hidden" name="cycle" value="{{ filters.cycle }}">
+                <input type="hidden" name="min_rating" value="{{ filters.min_rating|default_if_none:'' }}">
+                {% if filters.available %}<input type="hidden" name="available" value="1">{% endif %}
+
+                <label for="sort" class="whitespace-nowrap text-sm font-medium text-slate-500">Sort by</label>
+                <select name="sort" id="sort" onchange="this.form.submit()"
+                        class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                    {% for key, label in sort_options %}
+                        <option value="{{ key }}" {% if filters.sort == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        {% if listings %}
+            <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {% for listing in listings %}
+                    {% include "marketplace/_listing_card.html" %}
+                {% endfor %}
+            </div>
+
+            {% if total_pages > 1 %}
+                <nav class="mt-10 flex items-center justify-center gap-1.5">
+                    {% if has_previous %}
+                        <a href="?page={{ page|add:'-1' }}{{ querystring }}"
+                           class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                            Previous
+                        </a>
+                    {% endif %}
+
+                    {% for number in page_range %}
+                        {% if number == page %}
+                            <span class="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">{{ number }}</span>
+                        {% else %}
+                            <a href="?page={{ number }}{{ querystring }}"
+                               class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                                {{ number }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if has_next %}
+                        <a href="?page={{ page|add:'1' }}{{ querystring }}"
+                           class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                            Next
+                        </a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-20 text-center">
+                <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-slate-100">
+                    <svg class="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.2-5.2m2.2-5.3a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
+                    </svg>
+                </div>
+                <h2 class="mt-5 text-lg font-bold">No listings matched</h2>
+                <p class="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                    Try a different keyword, widen the price range, or clear your filters to see the full catalogue.
+                </p>
+                <a href="{% url 'browse' %}"
+                   class="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                    Clear all filters
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

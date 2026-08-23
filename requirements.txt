@@ -1,0 +1,4 @@
+# Django 4.2 LTS is pinned deliberately: Django 5.x requires MariaDB 10.5 or
+# later, and the MariaDB bundled with XAMPP is 10.4. 4.2 supports MariaDB 10.4.
+Django>=4.2,<5.0
+mysqlclient>=2.2.0

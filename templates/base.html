@@ -1,0 +1,192 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Sub-Share{% endblock %}</title>
+    <meta name="description" content="Share the cost of the subscriptions you already pay for.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="h-full bg-slate-50 font-sans text-slate-900 antialiased">
+
+<header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center gap-4">
+
+            <a href="{% url 'browse' %}" class="flex shrink-0 items-center gap-2">
+                <span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-sm font-extrabold text-white">S</span>
+                <span class="hidden text-lg font-extrabold tracking-tight sm:block">Sub&#8209;Share</span>
+            </a>
+
+            <form action="{% url 'browse' %}" method="get" class="relative hidden flex-1 md:block">
+                <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.2-5.2m2.2-5.3a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
+                </svg>
+                <input type="search" name="q" value="{{ filters.q|default:'' }}"
+                       placeholder="Search Netflix, Spotify, Canva…"
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50">
+            </form>
+
+            <nav class="ml-auto flex items-center gap-1">
+                <a href="{% url 'browse' %}"
+                   class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:block">
+                    Browse
+                </a>
+
+                {% if current_user.is_authenticated %}
+                    <a href="{% url 'wishlist' %}"
+                       class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.098 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+                        </svg>
+                        <span class="hidden sm:inline">Saved</span>
+                    </a>
+
+                    <div class="relative">
+                        <button type="button" id="account-button"
+                                class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                            <span class="grid h-8 w-8 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                                {{ current_user.name|slice:":1"|upper }}
+                            </span>
+                            <span class="hidden max-w-[9rem] truncate lg:block">{{ current_user.name }}</span>
+                            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </button>
+
+                        <div id="account-menu"
+                             class="absolute right-0 mt-2 hidden w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                            <div class="border-b border-slate-100 px-4 py-3">
+                                <p class="truncate text-sm font-semibold">{{ current_user.name }}</p>
+                                <p class="mt-0.5 text-xs capitalize text-slate-500">{{ current_user.role }} account</p>
+                            </div>
+                            <a href="{% url 'wishlist' %}" class="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">Saved listings</a>
+                            <form action="{% url 'logout' %}" method="post" class="border-t border-slate-100">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full px-4 py-2.5 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50">
+                                    Sign out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}"
+                       class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+                        Sign in
+                    </a>
+                    <a href="{% url 'register' %}"
+                       class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                        Get started
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+
+        <form action="{% url 'browse' %}" method="get" class="relative pb-3 md:hidden">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.2-5.2m2.2-5.3a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
+            </svg>
+            <input type="search" name="q" value="{{ filters.q|default:'' }}" placeholder="Search subscriptions…"
+                   class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-400 focus:bg-white">
+        </form>
+    </div>
+</header>
+
+{% if messages %}
+    <div class="mx-auto mt-4 max-w-7xl space-y-2 px-4 sm:px-6 lg:px-8">
+        {% for message in messages %}
+            <div class="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm
+                        {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800
+                        {% elif message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-800
+                        {% elif message.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-800
+                        {% else %}border-sky-200 bg-sky-50 text-sky-800{% endif %}">
+                <span class="flex-1">{{ message }}</span>
+                <button type="button" onclick="this.parentElement.remove()"
+                        class="shrink-0 rounded p-0.5 opacity-60 transition hover:opacity-100" aria-label="Dismiss">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="mt-16 border-t border-slate-200 bg-white">
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-xs font-extrabold text-white">S</span>
+                    <span class="font-extrabold tracking-tight">Sub&#8209;Share</span>
+                </div>
+                <p class="mt-2 max-w-sm text-sm text-slate-500">
+                    Share the cost of the subscriptions you already pay for.
+                </p>
+            </div>
+            <div class="flex gap-8 text-sm">
+                <div class="space-y-2">
+                    <p class="font-semibold text-slate-900">Marketplace</p>
+                    <a href="{% url 'browse' %}" class="block text-slate-500 transition hover:text-indigo-600">Browse slots</a>
+                    {% if current_user.is_authenticated %}
+                        <a href="{% url 'wishlist' %}" class="block text-slate-500 transition hover:text-indigo-600">Saved listings</a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="block text-slate-500 transition hover:text-indigo-600">Create an account</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <p class="mt-8 border-t border-slate-100 pt-6 text-xs text-slate-400">
+            &copy; {% now "Y" %} Sub-Share. Prices shown in Bangladeshi Taka.
+        </p>
+    </div>
+</footer>
+
+<script>
+    // Brand colours and rating-bar widths come out of the database, so they
+    // are applied from data attributes rather than inline style attributes.
+    (function () {
+        document.querySelectorAll('[data-bg]').forEach(function (element) {
+            element.style.backgroundColor = element.dataset.bg;
+        });
+        document.querySelectorAll('[data-width]').forEach(function (element) {
+            element.style.width = element.dataset.width + '%';
+        });
+    })();
+
+    (function () {
+        const button = document.getElementById('account-button');
+        const menu = document.getElementById('account-menu');
+        if (!button || !menu) return;
+
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            menu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function () {
+            menu.classList.add('hidden');
+        });
+    })();
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · Sub-Share{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md">
+    <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 class="text-2xl font-extrabold tracking-tight">Welcome back</h1>
+        <p class="mt-1 text-sm text-slate-500">Sign in to manage your slots and saved listings.</p>
+
+        {% if errors.form %}
+            <div class="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                {{ errors.form }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}" class="mt-6 space-y-5" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <div>
+                <label for="email" class="block text-sm font-semibold text-slate-700">Email address</label>
+                <input type="email" name="email" id="email" value="{{ email }}" autocomplete="email" required
+                       class="mt-1.5 w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-4
+                              {% if errors.email %}border-rose-300 focus:border-rose-400 focus:ring-rose-50{% else %}border-slate-200 focus:border-indigo-400 focus:ring-indigo-50{% endif %}">
+                {% if errors.email %}<p class="mt-1.5 text-xs font-medium text-rose-600">{{ errors.email }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
+                <input type="password" name="password" id="password" autocomplete="current-password" required
+                       class="mt-1.5 w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-4
+                              {% if errors.password %}border-rose-300 focus:border-rose-400 focus:ring-rose-50{% else %}border-slate-200 focus:border-indigo-400 focus:ring-indigo-50{% endif %}">
+                {% if errors.password %}<p class="mt-1.5 text-xs font-medium text-rose-600">{{ errors.password }}</p>{% endif %}
+            </div>
+
+            <button type="submit"
+                    class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200">
+                Sign in
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-slate-500">
+            New here?
+            <a href="{% url 'register' %}" class="font-semibold text-indigo-600 transition hover:text-indigo-700">Create an account</a>
+        </p>
+    </div>
+
+    <details class="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+        <summary class="cursor-pointer font-semibold text-slate-700">Sandbox accounts</summary>
+        <div class="mt-3 space-y-1.5 text-slate-600">
+            <p>Every sandbox account uses the password <code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs">demo1234</code></p>
+            <p><span class="font-medium">Buyer:</span> zaynul@example.com</p>
+            <p><span class="font-medium">Seller:</span> rafiul@example.com</p>
+            <p><span class="font-medium">Administrator:</span> admin@subshare.com</p>
+        </div>
+    </details>
+</div>
+{% endblock %}
