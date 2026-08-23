@@ -194,6 +194,20 @@ def _querystring_without_page(request):
     return f"&{encoded}" if encoded else ""
 
 
+def _querystring_for_category(request):
+    """Current filters as a query string, minus category and page.
+
+    Each category pill appends its own `category=` value to this, so switching
+    category keeps the price, rating and cycle filters the shopper already
+    chose and sends them back to page one.
+    """
+    params = request.GET.copy()
+    params.pop("page", None)
+    params.pop("category", None)
+    encoded = params.urlencode()
+    return f"&{encoded}" if encoded else ""
+
+
 def home(request):
     return redirect("browse")
 
@@ -261,7 +275,13 @@ def browse(request):
     for listing in listings:
         listing["in_wishlist"] = listing["listing_id"] in wishlist_ids
 
+    selected_category = next(
+        (row for row in categories if row["category_id"] == filters["category"]),
+        None,
+    )
+
     context = {
+        "selected_category": selected_category,
         "listings": listings,
         "filters": filters,
         "categories": categories,
@@ -275,6 +295,8 @@ def browse(request):
         "has_previous": page > 1,
         "has_next": page < total_pages,
         "querystring": _querystring_without_page(request),
+        "category_querystring": _querystring_for_category(request),
+        "catalogue_total": sum(row["listing_count"] for row in categories),
         "has_active_filters": any(
             [
                 filters["q"],

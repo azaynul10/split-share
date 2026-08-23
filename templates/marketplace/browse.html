@@ -3,6 +3,36 @@
 {% block title %}Browse subscription slots · Sub-Share{% endblock %}
 
 {% block content %}
+{% if categories %}
+    <nav aria-label="Categories" class="mb-7 flex gap-2 overflow-x-auto pb-1">
+        <a href="{% url 'browse' %}?category={{ category_querystring }}"
+           {% if not filters.category %}aria-current="page"{% endif %}
+           class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition
+                  {% if not filters.category %}border-indigo-600 bg-indigo-600 text-white{% else %}border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900{% endif %}">
+            All categories
+            <span class="rounded-full px-1.5 py-0.5 text-xs font-bold
+                         {% if not filters.category %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-500{% endif %}">
+                {{ catalogue_total }}
+            </span>
+        </a>
+
+        {% for category in categories %}
+            {% if category.listing_count %}
+                <a href="{% url 'browse' %}?category={{ category.category_id }}{{ category_querystring }}"
+                   {% if filters.category == category.category_id %}aria-current="page"{% endif %}
+                   class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition
+                          {% if filters.category == category.category_id %}border-indigo-600 bg-indigo-600 text-white{% else %}border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900{% endif %}">
+                    {{ category.name }}
+                    <span class="rounded-full px-1.5 py-0.5 text-xs font-bold
+                                 {% if filters.category == category.category_id %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-500{% endif %}">
+                        {{ category.listing_count }}
+                    </span>
+                </a>
+            {% endif %}
+        {% endfor %}
+    </nav>
+{% endif %}
+
 <div class="lg:grid lg:grid-cols-[17rem_1fr] lg:gap-8">
 
     <!-- ================= Filters ================= -->
@@ -110,7 +140,7 @@
         <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight">
-                    {% if filters.q %}Results for &ldquo;{{ filters.q }}&rdquo;{% else %}Browse subscription slots{% endif %}
+                    {% if filters.q %}Results for &ldquo;{{ filters.q }}&rdquo;{% elif selected_category %}{{ selected_category.name }}{% else %}Browse subscription slots{% endif %}
                 </h1>
                 <p class="mt-1 text-sm text-slate-500">
                     {% if total %}
