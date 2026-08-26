@@ -17,9 +17,25 @@ orders, groups and earnings in one place.
 
 ```
 db/
-  schema.sql              12 tables, foreign keys, constraints and indexes
+  schema.sql              12 tables with primary keys, foreign keys and constraints
   seed.sql                demo data: users, listings, orders, reviews, groups
+  verify.sql              integrity checks to run after a fresh import
   make_password_hash.py   generates Django-compatible PBKDF2 hashes
+
+marketplace/
+  db_utils.py             cursor helpers; every query in the project goes through here
+  views_auth.py           register, login, logout
+  views_browse.py         catalogue, search, filters, sorting, listing detail
+  views_wishlist.py       saved listings
+  views_coupons.py        promo code validation
+  decorators.py           login_required_raw, anonymous_only
+  context_processors.py   session user exposed to every template
+  urls.py                 route table
+
+split_share_core/         Django settings, root URL conf, WSGI and ASGI entry points
+templates/                base layout plus the auth and marketplace pages
+manage.py                 Django entry point
+requirements.txt          Python dependencies
 ```
 
 ## Database setup
@@ -48,6 +64,32 @@ USE split_share;
 SELECT COUNT(*) FROM Listings;   -- 30
 SELECT COUNT(*) FROM Orders;     -- 50
 ```
+
+Note that `schema.sql` begins with `DROP DATABASE IF EXISTS split_share`. Re-running it wipes
+everything, so run `seed.sql` again straight afterwards.
+
+## Running the app
+
+MySQL has to be listening before Django starts, otherwise the first request fails with
+`OperationalError (2002)`. On XAMPP, start MySQL from the control panel first.
+
+```powershell
+pip install -r requirements.txt
+python manage.py runserver
+```
+
+Then open http://127.0.0.1:8000. The catalogue is at `/browse/`.
+
+There are no Django migrations to run. The app owns no models, so the schema comes only from
+`db/schema.sql`.
+
+| Route | Page |
+|---|---|
+| `/browse/` | catalogue with search, filters, sorting and pagination |
+| `/listing/<id>/` | listing detail, reviews and promo code box |
+| `/wishlist/` | saved listings |
+| `/register/`, `/login/`, `/logout/` | authentication |
+| `/coupons/validate/` | JSON endpoint used by the promo code box |
 
 ## Demo accounts
 
@@ -96,3 +138,31 @@ Design decisions worth noting:
    `Orders.payment_ref` and moves `payment_status` to `pending_verification`.
 4. An administrator verifies the reference and approves the order, which writes an
    `OrderStatusHistory` row and a notification, and decrements `available_slots`.
+
+## Contributing
+
+`main` is protected, so nobody pushes to it directly. Every change arrives through a pull
+request, including from collaborators with write access.
+
+Start each piece of work from an up to date `main`:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/seller-dashboard
+```
+
+Commit as you go, then push the branch and open a pull request:
+
+```bash
+git push -u origin feature/seller-dashboard
+```
+
+After the pull request is merged, return to `main` and pull before starting the next branch.
+
+Two rules that keep the project consistent:
+
+- **Every database call goes through `marketplace/db_utils.py`.** No Django ORM, no models,
+  no raw cursors opened elsewhere.
+- **User input is always passed as a `%s` parameter**, never formatted into the SQL string.
+  Compare `db_utils.py` for the correct and incorrect forms.
