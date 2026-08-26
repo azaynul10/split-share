@@ -192,10 +192,10 @@
                     </p>
                 {% endif %}
 
-                <div class="mt-6 space-y-4">
+                <form id="checkout-form" method="get" action="{% url 'checkout' listing.listing_id %}" class="mt-6 space-y-4">
                     <div>
                         <label for="slots" class="block text-sm font-semibold text-slate-700">How many slots?</label>
-                        <select id="slots"
+                        <select id="slots" name="slots"
                                 class="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
                                 {% if sold_out %}disabled{% endif %}>
                             {% if sold_out %}
@@ -211,7 +211,7 @@
                     <div>
                         <label for="coupon-code" class="block text-sm font-semibold text-slate-700">Promo code</label>
                         <div class="mt-1.5 flex gap-2">
-                            <input type="text" id="coupon-code" placeholder="EIDSALE20" autocomplete="off"
+                            <input type="text" id="coupon-code" name="coupon_code" placeholder="EIDSALE20" autocomplete="off"
                                    class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm uppercase outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
                                    {% if sold_out %}disabled{% endif %}>
                             <button type="button" id="coupon-apply"
@@ -222,7 +222,7 @@
                         </div>
                         <p id="coupon-message" class="mt-2 hidden text-xs font-medium"></p>
                     </div>
-                </div>
+                </form>
 
                 <dl class="mt-6 space-y-2.5 border-t border-slate-100 pt-5 text-sm">
                     <div class="flex justify-between">
@@ -239,12 +239,12 @@
                     </div>
                 </dl>
 
-                <button type="button" disabled
-                        class="mt-6 w-full cursor-not-allowed rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">
+                <button type="submit" form="checkout-form"
+                        class="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 {% if sold_out %}cursor-not-allowed bg-slate-200 text-slate-500 hover:bg-slate-200{% endif %}" {% if sold_out %}disabled{% endif %}>
                     Continue to checkout
                 </button>
                 <p class="mt-2 text-center text-xs text-slate-400">
-                    Checkout is handled by the order module.
+                    Your final price is confirmed securely at checkout.
                 </p>
             </div>
         </div>

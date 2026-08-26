@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Order received · Sub-Share{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-xl rounded-2xl border border-emerald-200 bg-white p-8 text-center shadow-sm">
+    <div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-xl text-emerald-700">✓</div>
+    <h1 class="mt-4 text-2xl font-extrabold">Order received</h1>
+    <p class="mt-2 text-slate-600">Order #{{ order.order_id }} for {{ order.platform_name }} · {{ order.plan_name }}</p>
+    <dl class="mt-6 space-y-3 rounded-xl bg-slate-50 p-5 text-left text-sm"><div class="flex justify-between"><dt>Slots</dt><dd class="font-semibold">{{ order.slots_ordered }}</dd></div><div class="flex justify-between"><dt>Discount</dt><dd class="font-semibold">৳{{ order.discount_amount|floatformat:2 }}</dd></div><div class="flex justify-between border-t pt-3 text-base"><dt class="font-bold">Total</dt><dd class="font-extrabold">৳{{ order.total_amount|floatformat:2 }}</dd></div></dl>
+    <p class="mt-6 text-sm text-slate-500">Your order is pending payment. Payment-reference submission will be available in the next step.</p>
+    <a href="{% url 'browse' %}" class="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Browse more listings</a>
+</div>
+{% endblock %}
