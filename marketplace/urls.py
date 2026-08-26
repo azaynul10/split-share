@@ -2,11 +2,12 @@
 
 from django.urls import path
 
-from . import views_auth, views_browse, views_coupons, views_wishlist
+from . import views_auth, views_browse, views_coupons, views_home, views_wishlist
 
 urlpatterns = [
+    # Landing page
+    path("", views_home.landing, name="home"),
     # Catalogue
-    path("", views_browse.home, name="home"),
     path("browse/", views_browse.browse, name="browse"),
     path("listing/<int:listing_id>/", views_browse.listing_detail, name="listing_detail"),
     # Authentication

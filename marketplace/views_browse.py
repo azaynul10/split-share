@@ -208,10 +208,6 @@ def _querystring_for_category(request):
     return f"&{encoded}" if encoded else ""
 
 
-def home(request):
-    return redirect("browse")
-
-
 def browse(request):
     filters, where_sql, where_params, having_sql, min_rating = _build_filters(request)
     page = max(1, _parse_int(request.GET.get("page")) or 1)
