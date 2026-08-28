@@ -6,7 +6,7 @@
     <h1 class="mt-4 text-2xl font-extrabold">Order received</h1>
     <p class="mt-2 text-slate-600">Order #{{ order.order_id }} for {{ order.platform_name }} · {{ order.plan_name }}</p>
     <dl class="mt-6 space-y-3 rounded-xl bg-slate-50 p-5 text-left text-sm"><div class="flex justify-between"><dt>Slots</dt><dd class="font-semibold">{{ order.slots_ordered }}</dd></div><div class="flex justify-between"><dt>Discount</dt><dd class="font-semibold">৳{{ order.discount_amount|floatformat:2 }}</dd></div><div class="flex justify-between border-t pt-3 text-base"><dt class="font-bold">Total</dt><dd class="font-extrabold">৳{{ order.total_amount|floatformat:2 }}</dd></div></dl>
-    <p class="mt-6 text-sm text-slate-500">Your order is pending payment. Payment-reference submission will be available in the next step.</p>
+    <p class="mt-6 text-sm text-slate-500">Your transaction ID was submitted. Your order is awaiting administrator verification.</p>
     <a href="{% url 'browse' %}" class="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Browse more listings</a>
 </div>
 {% endblock %}
