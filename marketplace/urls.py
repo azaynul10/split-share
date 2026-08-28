@@ -8,6 +8,7 @@ from . import (
     views_coupons,
     views_home,
     views_orders,
+    views_reviews,
     views_wishlist,
 )
 
@@ -23,6 +24,7 @@ urlpatterns = [
     path("orders/<int:order_id>/payment/", views_orders.submit_payment, name="submit_payment"),
     path("admin/orders/", views_orders.admin_orders, name="admin_orders"),
     path("admin/orders/<int:order_id>/review/", views_orders.review_order, name="review_order"),
+    path("listing/<int:listing_id>/review/", views_reviews.create_review, name="create_review"),
     # Authentication
     path("register/", views_auth.register, name="register"),
     path("login/", views_auth.login_view, name="login"),
