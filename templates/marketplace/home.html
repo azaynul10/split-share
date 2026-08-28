@@ -1,355 +1,281 @@
-{% load static %}<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sub-Share — Share subscriptions. Split the cost.</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/landing.css' %}">
-</head>
+{% comment %}
+Public landing page. Every figure below is a live aggregate from views_home.py,
+so nothing here is hard-coded marketing copy.
 
-<body>
+Brand colours and the slot progress bars are applied from data-bg and data-width
+by the script in base.html, because those values come out of the database and
+cannot be written as static Tailwind classes.
+{% endcomment %}
 
-  <!-- Ambient glows -->
-  <div class="glow-wrap">
-    <div class="glow"></div>
-    <div class="glow2"></div>
-  </div>
+{% block title %}Sub-Share — Share subscriptions. Split the cost.{% endblock %}
 
-  <!-- ── Nav ─────────────────────────────────────────────── -->
-  <nav>
-    <div class="container">
-      <div class="nav-inner">
-        <a class="logo" href="{% url 'home' %}" style="text-decoration:none">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-              <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+{% block content %}
+
+<section class="text-center">
+    <span class="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-xs font-bold text-indigo-700">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>
+        </svg>
+        {{ stats.open_slots }} open slots across {{ stats.platform_count }} platforms
+    </span>
+
+    <h1 class="mx-auto mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+        Share subscriptions.
+        <span class="block text-indigo-600">Split the cost.</span>
+    </h1>
+
+    <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-600">
+        A marketplace for sharing digital subscription slots. Pay for the seat you actually use
+        instead of the whole plan, with every price in Taka and payment through bKash, Nagad or
+        Rocket.
+    </p>
+
+    <form method="get" action="{% url 'browse' %}" class="mx-auto mt-8 flex max-w-xl gap-2">
+        <div class="relative flex-1">
+            <svg class="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.2-5.2m2.2-5.3a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
             </svg>
-          </div>
-          <span class="logo-text">Sub-Share</span>
-        </a>
-
-        <div class="nav-links">
-          <a class="nav-link" href="{% url 'browse' %}" style="text-decoration:none">Browse</a>
-          <a class="nav-link" href="#how-it-works" style="text-decoration:none">How it works</a>
-          {% if current_user.is_authenticated %}
-            <a class="nav-link" href="{% url 'wishlist' %}" style="text-decoration:none">Saved</a>
-            {% if current_user.role == 'buyer' %}
-              <a class="nav-link" href="{% url 'buyer_orders' %}" style="text-decoration:none">My orders</a>
-            {% endif %}
-            {% if current_user.role == 'admin' %}
-              <a class="nav-link" href="{% url 'admin_orders' %}" style="text-decoration:none">Order review</a>
-            {% endif %}
-          {% endif %}
+            <input type="search" name="q" placeholder="Netflix, Spotify, Canva…"
+                   class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
         </div>
-
-        <div class="nav-actions">
-          {% if current_user.is_authenticated %}
-            <a class="btn-ghost" href="{% url 'logout' %}" style="text-decoration:none">Sign out</a>
-            <a class="btn-primary" href="{% url 'browse' %}" style="text-decoration:none">
-              Browse slots
-            </a>
-            <div class="avatar-sm">{{ current_user.name|slice:":1"|upper }}</div>
-          {% else %}
-            <a class="btn-ghost" href="{% url 'login' %}" style="text-decoration:none">Sign in</a>
-            <a class="btn-primary" href="{% url 'register' %}" style="text-decoration:none">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Create account
-            </a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <div class="page active">
-    <div class="container">
-
-      <!-- ── Hero ──────────────────────────────────────────── -->
-      <section class="hero">
-        <div class="hero-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-          <span>{{ stats.open_slots }} open slots across {{ stats.platform_count }} platforms</span>
-        </div>
-        <h1 class="hero-title">
-          Share subscriptions.<br>
-          <span class="hero-gradient">Split the cost.</span>
-        </h1>
-        <p class="hero-sub">
-          A marketplace for sharing digital subscription slots. Pay for the seat you use
-          instead of the whole plan, with prices in Taka and payment through bKash, Nagad
-          or Rocket.
-        </p>
-
-        <form class="search-row" method="get" action="{% url 'browse' %}">
-          <div class="search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input class="search-input" type="search" name="q" placeholder="Netflix, Spotify, Canva…" />
-          </div>
-          <button class="btn-primary" type="submit">
+        <button type="submit"
+                class="shrink-0 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
             Find slots
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
-        </form>
+        </button>
+    </form>
 
-        <!-- Stats strip. Every figure is a live aggregate, see views_home.py -->
-        <div class="stat-strip">
-          <div class="stat-cell">
-            <div class="stat-value">{{ stats.member_count }}</div>
-            <div class="stat-label">Members</div>
-          </div>
-          <div class="stat-cell" style="border-left:1px solid var(--border2)">
-            <div class="stat-value">{{ stats.open_slots }}</div>
-            <div class="stat-label">Open slots</div>
-          </div>
-          <div class="stat-cell" style="border-left:1px solid var(--border2)">
-            <div class="stat-value">{{ stats.platform_count }}</div>
-            <div class="stat-label">Platforms</div>
-          </div>
-          <div class="stat-cell" style="border-left:1px solid var(--border2)">
-            <div class="stat-value">
-              {% if stats.avg_rating %}{{ stats.avg_rating }}★{% else %}—{% endif %}
-            </div>
-            <div class="stat-label">Average rating</div>
-          </div>
+    <dl class="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 sm:grid-cols-4">
+        <div class="bg-white px-4 py-5">
+            <dd class="text-2xl font-extrabold tracking-tight">{{ stats.member_count }}</dd>
+            <dt class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Members</dt>
         </div>
-      </section>
+        <div class="bg-white px-4 py-5">
+            <dd class="text-2xl font-extrabold tracking-tight">{{ stats.open_slots }}</dd>
+            <dt class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Open slots</dt>
+        </div>
+        <div class="bg-white px-4 py-5">
+            <dd class="text-2xl font-extrabold tracking-tight">{{ stats.platform_count }}</dd>
+            <dt class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Platforms</dt>
+        </div>
+        <div class="bg-white px-4 py-5">
+            <dd class="text-2xl font-extrabold tracking-tight">
+                {% if stats.avg_rating %}{{ stats.avg_rating }}<span class="text-amber-500">★</span>{% else %}&mdash;{% endif %}
+            </dd>
+            <dt class="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Avg rating</dt>
+        </div>
+    </dl>
+</section>
 
-      <!-- ── Categories ────────────────────────────────────── -->
-      {% if categories %}
-        <div class="pill-row mb-6">
-          {% for category in categories %}
-            <a class="pill" href="{% url 'browse' %}?category={{ category.category_id }}"
-               style="text-decoration:none">
-              {{ category.name }}
-              <span class="muted" style="font-size:.7rem">{{ category.listing_count }}</span>
+{% if categories %}
+    <div class="mt-14 flex flex-wrap justify-center gap-2">
+        {% for category in categories %}
+            <a href="{% url 'browse' %}?category={{ category.category_id }}"
+               class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">
+                {{ category.name }}
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">{{ category.listing_count }}</span>
             </a>
-          {% endfor %}
-        </div>
-      {% endif %}
-
-      <!-- ── Featured listings ─────────────────────────────── -->
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="section-title" style="font-size:1.6rem">Featured listings</h2>
-        <a class="text-sm primary" href="{% url 'browse' %}"
-           style="text-decoration:none;display:flex;align-items:center;gap:4px">
-          View all {{ stats.listing_count }}
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </a>
-      </div>
-
-      <div class="listing-grid">
-        {% for listing in featured %}
-          <a class="listing-card" href="{% url 'listing_detail' listing.listing_id %}"
-             style="display:block;text-decoration:none;color:inherit">
-            {% if forloop.first and listing.review_count %}
-              <div class="badge" style="background:rgba(0,217,166,.9);color:#07051a">Top rated</div>
-            {% endif %}
-            <div class="card-strip" style="background:{{ listing.brand_color }}"></div>
-            <div class="card-body">
-
-              <div class="card-header">
-                <div class="service-icon-wrap">
-                  <div class="service-icon"
-                       style="background:{{ listing.brand_color }}18;border:1px solid {{ listing.brand_color }}40">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="{{ listing.brand_color }}" stroke-width="2">
-                      <rect x="2" y="7" width="20" height="15" rx="2" />
-                      <path d="M17 2l-5 5-5-5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="service-name">{{ listing.platform_name }}</div>
-                    <div class="service-plan">{{ listing.plan_name }}</div>
-                  </div>
-                </div>
-                <div class="card-price">
-                  <div class="price-main">
-                    &#2547;{{ listing.price_per_slot|floatformat:"-2" }}<span
-                      style="font-size:.7rem;font-weight:400;color:var(--muted)">/{{ listing.cycle_label }}</span>
-                  </div>
-                  {% if listing.total_slots > 1 %}
-                    <div class="price-orig">&#2547;{{ listing.full_plan_price|floatformat:"-2" }}</div>
-                  {% endif %}
-                </div>
-              </div>
-
-              <div class="tag-row">
-                <span class="tag">{{ listing.category_name }}</span>
-                <span class="tag">{{ listing.billing_cycle|capfirst }}</span>
-                <span class="tag">{{ listing.region }}</span>
-              </div>
-
-              <div class="slot-bar-wrap">
-                <div class="slot-meta">
-                  <span class="muted" style="font-size:.68rem">
-                    {{ listing.filled_slots }} of {{ listing.total_slots }} filled
-                  </span>
-                  <span class="accent" style="font-size:.68rem">{{ listing.available_slots }} left</span>
-                </div>
-                <div class="slot-bar-bg">
-                  <div class="slot-bar-fill" style="width:{{ listing.filled_percent }}%"></div>
-                </div>
-              </div>
-
-              <hr class="card-divider">
-
-              <div class="card-footer-row">
-                <div class="host-row">
-                  <div class="host-avatar">{{ listing.seller_initials }}</div>
-                  <div>
-                    <div class="host-name">{{ listing.seller_name }}</div>
-                    <div class="star-row">
-                      {% for star in star_range %}
-                        <svg class="star" viewBox="0 0 24 24"
-                             fill="{% if listing.rating_stars and star <= listing.rating_stars %}#f59e0b{% else %}none{% endif %}"
-                             stroke="{% if listing.rating_stars and star <= listing.rating_stars %}#f59e0b{% else %}rgba(255,255,255,.18){% endif %}"
-                             stroke-width="2">
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                      {% endfor %}
-                      <span class="review-count">({{ listing.review_count }})</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="join-btn">View</div>
-              </div>
-
-            </div>
-          </a>
-        {% empty %}
-          <p class="muted">No listings are open right now. Check back shortly.</p>
         {% endfor %}
-      </div>
-
-      <!-- ── How it works ──────────────────────────────────── -->
-      <section id="how-it-works" style="border-top:1px solid var(--border2); margin-top:80px; padding:80px 0">
-        <div class="section-label">How it works</div>
-        <h2 class="section-title mb-8" style="font-size:clamp(1.8rem,3.5vw,2.8rem);max-width:500px">
-          Sharing subscriptions has never been simpler
-        </h2>
-        <div class="steps-grid">
-          <div>
-            <div class="step-num">01</div>
-            <div class="step-title">Browse listings</div>
-            <div class="step-body">
-              Search {{ stats.listing_count }} open listings and filter by category, price,
-              billing cycle or seller rating.
-            </div>
-          </div>
-          <div>
-            <div class="step-num">02</div>
-            <div class="step-title">Reserve a slot</div>
-            <div class="step-body">
-              Pick how many seats you need. The seller reviews your order and approves it,
-              which is recorded against the listing.
-            </div>
-          </div>
-          <div>
-            <div class="step-num">03</div>
-            <div class="step-title">Pay your share</div>
-            <div class="step-body">
-              Pay through bKash, Nagad or Rocket and submit the transaction reference. An
-              administrator verifies it and your slot opens.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ── Trust ─────────────────────────────────────────── -->
-      <section style="border-top:1px solid var(--border2); background:rgba(15,12,42,.4); margin:0 -24px; padding:64px 24px">
-        <div class="trust-grid">
-          <div class="trust-item">
-            <div class="trust-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            </div>
-            <div>
-              <div class="trust-title">Reviewed by real buyers</div>
-              <div class="trust-body">
-                {{ stats.review_count }} reviews so far, averaging
-                {% if stats.avg_rating %}{{ stats.avg_rating }} out of 5{% else %}no score yet{% endif %}.
-                Ratings come only from completed orders.
-              </div>
-            </div>
-          </div>
-          <div class="trust-item">
-            <div class="trust-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                <polyline points="17 6 23 6 23 12" />
-              </svg>
-            </div>
-            <div>
-              <div class="trust-title">Pay per seat, not per plan</div>
-              <div class="trust-body">
-                Each card shows the slot price next to what the full plan would cost you
-                alone, so the saving is visible before you commit.
-              </div>
-            </div>
-          </div>
-          <div class="trust-item">
-            <div class="trust-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
-                <line x1="7" y1="7" x2="7.01" y2="7" />
-              </svg>
-            </div>
-            <div>
-              <div class="trust-title">Local payment, Taka pricing</div>
-              <div class="trust-body">
-                Every price is in Taka and settled through bKash, Nagad or Rocket. The
-                transaction reference is stored against your order.
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ── CTA ───────────────────────────────────────────── -->
-      <section class="py-16">
-        <div class="cta-banner">
-          <div class="cta-glow"></div>
-          <div class="cta-inner">
-            <div class="cta-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              <span>Free to join</span>
-            </div>
-            <div class="cta-title">Ready to start saving?</div>
-            <p class="cta-sub">
-              Browse {{ stats.open_slots }} open slots across {{ stats.platform_count }}
-              platforms and pay only for the seat you use.
-            </p>
-            <div class="cta-btns">
-              <a class="btn-primary" href="{% url 'browse' %}" style="text-decoration:none">Browse listings</a>
-              {% if not current_user.is_authenticated %}
-                <a class="btn-outline" href="{% url 'register' %}" style="text-decoration:none">Create an account</a>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </section>
-
     </div>
-  </div>
+{% endif %}
 
-</body>
+<section class="mt-14">
+    <div class="flex items-end justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-extrabold tracking-tight">Featured listings</h2>
+            <p class="mt-1 text-sm text-slate-500">The best-reviewed slots that are still open.</p>
+        </div>
+        <a href="{% url 'browse' %}" class="flex shrink-0 items-center gap-1 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+            View all {{ stats.listing_count }}
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
+    </div>
 
-</html>
+    <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {% for listing in featured %}
+            <a href="{% url 'listing_detail' listing.listing_id %}"
+               class="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-indigo-300 hover:shadow-lg">
+
+                <span class="h-1.5 w-full" data-bg="{{ listing.brand_color }}"></span>
+
+                {% if forloop.first and listing.review_count %}
+                    <span class="absolute right-3 top-4 rounded-full bg-emerald-500 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
+                        Top rated
+                    </span>
+                {% endif %}
+
+                <div class="flex flex-1 flex-col p-5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-extrabold text-white"
+                                  data-bg="{{ listing.brand_color }}">
+                                {{ listing.platform_name|slice:":1"|upper }}
+                            </span>
+                            <div>
+                                <p class="font-bold leading-tight">{{ listing.platform_name }}</p>
+                                <p class="text-xs text-slate-500">{{ listing.plan_name }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-extrabold tracking-tight">
+                                &#2547;{{ listing.price_per_slot|floatformat:"-2" }}<span class="text-xs font-medium text-slate-400">/{{ listing.cycle_label }}</span>
+                            </p>
+                            {% if listing.total_slots > 1 %}
+                                <p class="text-xs text-slate-400 line-through">&#2547;{{ listing.full_plan_price|floatformat:"-2" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap gap-1.5">
+                        <span class="rounded-md bg-slate-100 px-2 py-1 text-[0.7rem] font-semibold text-slate-600">{{ listing.category_name }}</span>
+                        <span class="rounded-md bg-slate-100 px-2 py-1 text-[0.7rem] font-semibold text-slate-600">{{ listing.billing_cycle|capfirst }}</span>
+                        <span class="rounded-md bg-slate-100 px-2 py-1 text-[0.7rem] font-semibold text-slate-600">{{ listing.region }}</span>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-500">{{ listing.filled_slots }} of {{ listing.total_slots }} filled</span>
+                            <span class="font-semibold text-emerald-600">{{ listing.available_slots }} left</span>
+                        </div>
+                        <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                            <div class="h-full rounded-full bg-indigo-500" data-width="{{ listing.filled_percent }}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                                {{ listing.seller_initials }}
+                            </span>
+                            <div>
+                                <p class="text-sm font-semibold leading-tight">{{ listing.seller_name }}</p>
+                                <div class="flex items-center gap-0.5">
+                                    {% for star in star_range %}
+                                        <svg class="h-3.5 w-3.5 {% if listing.rating_stars and star <= listing.rating_stars %}text-amber-400{% else %}text-slate-200{% endif %}"
+                                             viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L1.5 7.7l5.9-.9L10 1.5Z"/>
+                                        </svg>
+                                    {% endfor %}
+                                    <span class="ml-1 text-xs text-slate-400">({{ listing.review_count }})</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition group-hover:bg-indigo-600 group-hover:text-white">
+                            View
+                        </span>
+                    </div>
+                </div>
+            </a>
+        {% empty %}
+            <p class="text-sm text-slate-500">No listings are open right now. Check back shortly.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="how-it-works" class="mt-20 border-t border-slate-200 pt-14">
+    <p class="text-xs font-bold uppercase tracking-widest text-indigo-600">How it works</p>
+    <h2 class="mt-3 max-w-xl text-3xl font-extrabold tracking-tight">
+        Sharing subscriptions has never been simpler
+    </h2>
+
+    <div class="mt-10 grid gap-8 sm:grid-cols-3">
+        <div>
+            <p class="text-3xl font-extrabold text-slate-200">01</p>
+            <h3 class="mt-2 font-bold">Browse listings</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                Search {{ stats.listing_count }} open listings and filter by category, price,
+                billing cycle or seller rating.
+            </p>
+        </div>
+        <div>
+            <p class="text-3xl font-extrabold text-slate-200">02</p>
+            <h3 class="mt-2 font-bold">Reserve a slot</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                Choose how many seats you need. Your order is recorded as pending until the
+                payment reference is verified.
+            </p>
+        </div>
+        <div>
+            <p class="text-3xl font-extrabold text-slate-200">03</p>
+            <h3 class="mt-2 font-bold">Pay your share</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                Pay through bKash, Nagad or Rocket and submit the transaction ID. Once an
+                administrator verifies it, the slot is yours.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="mt-20 grid gap-8 rounded-2xl border border-slate-200 bg-white p-8 sm:grid-cols-3">
+    <div>
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+            </svg>
+        </span>
+        <h3 class="mt-4 font-bold">Reviewed by real buyers</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            {{ stats.review_count }} reviews so far, averaging
+            {% if stats.avg_rating %}{{ stats.avg_rating }} out of 5{% else %}no score yet{% endif %}.
+            Only buyers with an approved order can leave one.
+        </p>
+    </div>
+    <div>
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M23 6l-9.5 9.5-5-5L1 18"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 6h6v6"/>
+            </svg>
+        </span>
+        <h3 class="mt-4 font-bold">Pay per seat, not per plan</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            Each card shows the slot price beside what the full plan would cost you alone, so
+            the saving is visible before you commit.
+        </p>
+    </div>
+    <div>
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01"/>
+            </svg>
+        </span>
+        <h3 class="mt-4 font-bold">Local payment, Taka pricing</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            Every price is in Taka and settled through bKash, Nagad or Rocket. Your transaction
+            reference is stored against the order.
+        </p>
+    </div>
+</section>
+
+<section class="mt-20 overflow-hidden rounded-2xl bg-slate-900 px-8 py-14 text-center">
+    <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-indigo-200">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M22 4 12 14l-3-3"/>
+        </svg>
+        Free to join
+    </span>
+    <h2 class="mt-5 text-3xl font-extrabold tracking-tight text-white">Ready to start saving?</h2>
+    <p class="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-300">
+        Browse {{ stats.open_slots }} open slots across {{ stats.platform_count }} platforms and
+        pay only for the seat you use.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <a href="{% url 'browse' %}"
+           class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500">
+            Browse listings
+        </a>
+        {% if not current_user.is_authenticated %}
+            <a href="{% url 'register' %}"
+               class="rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                Create an account
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

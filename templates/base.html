@@ -56,6 +56,19 @@
                         <span class="hidden sm:inline">Saved</span>
                     </a>
 
+                    {% if current_user.role == 'buyer' %}
+                        <a href="{% url 'buyer_orders' %}"
+                           class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:block">
+                            Orders
+                        </a>
+                    {% endif %}
+                    {% if current_user.role == 'admin' %}
+                        <a href="{% url 'admin_orders' %}"
+                           class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:block">
+                            Order review
+                        </a>
+                    {% endif %}
+
                     <div class="relative">
                         <button type="button" id="account-button"
                                 class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
