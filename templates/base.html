@@ -75,6 +75,12 @@
                                 <p class="mt-0.5 text-xs capitalize text-slate-500">{{ current_user.role }} account</p>
                             </div>
                             <a href="{% url 'wishlist' %}" class="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">Saved listings</a>
+                            {% if current_user.role == 'buyer' %}
+                                <a href="{% url 'buyer_orders' %}" class="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">My orders</a>
+                            {% endif %}
+                            {% if current_user.role == 'admin' %}
+                                <a href="{% url 'admin_orders' %}" class="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">Order review</a>
+                            {% endif %}
                             <form action="{% url 'logout' %}" method="post" class="border-t border-slate-100">
                                 {% csrf_token %}
                                 <button type="submit" class="w-full px-4 py-2.5 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50">

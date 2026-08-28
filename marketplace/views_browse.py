@@ -375,6 +375,19 @@ SELECT_RATING_BREAKDOWN = """
     ORDER BY rating DESC
 """
 
+SELECT_CAN_REVIEW = """
+    SELECT 1
+    FROM Orders o
+    WHERE o.buyer_id = %s
+      AND o.listing_id = %s
+      AND o.order_status = 'Approved'
+      AND NOT EXISTS (
+          SELECT 1 FROM Reviews r
+          WHERE r.reviewer_id = o.buyer_id AND r.listing_id = o.listing_id
+      )
+    LIMIT 1
+"""
+
 SELECT_SELLER_SUMMARY = """
     SELECT
         COUNT(DISTINCT l.listing_id) AS listing_count,
@@ -423,6 +436,7 @@ def listing_detail(request, listing_id):
     breakdown_map = {}
     seller = {"listing_count": 0, "seller_rating": None}
     related = []
+    can_review = False
 
     try:
         reviews = fetch_all(SELECT_LISTING_REVIEWS, [listing_id])
@@ -434,6 +448,8 @@ def listing_detail(request, listing_id):
         related = fetch_all(
             SELECT_RELATED_LISTINGS, [listing["category_id"], listing_id]
         )
+        if request.session.get("role") == "buyer":
+            can_review = bool(fetch_one(SELECT_CAN_REVIEW, [viewer_id, listing_id]))
     except QueryError:
         messages.warning(request, "Some details on this page could not be loaded.")
 
@@ -459,5 +475,6 @@ def listing_detail(request, listing_id):
         "sold_out": listing["available_slots"] == 0,
         "star_range": range(1, 6),
         "slot_choices": range(1, listing["available_slots"] + 1),
+        "can_review": can_review,
     }
     return render(request, "marketplace/listing_detail.html", context)
