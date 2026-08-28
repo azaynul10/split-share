@@ -71,7 +71,9 @@ def _slots(raw):
         return 0
 
 
-def _checkout_context(listing, slots, coupon_code="", coupon_error=""):
+def _checkout_context(
+    listing, slots, coupon_code="", coupon_error="", payment_method="", payment_ref=""
+):
     slots = max(1, min(slots, listing["available_slots"])) if listing["available_slots"] else 0
     subtotal = _money(listing["price_per_slot"]) * slots
     return {
@@ -80,6 +82,8 @@ def _checkout_context(listing, slots, coupon_code="", coupon_error=""):
         "subtotal": subtotal,
         "coupon_code": coupon_code.strip().upper(),
         "coupon_error": coupon_error,
+        "payment_method": payment_method,
+        "payment_ref": payment_ref,
     }
 
 
@@ -115,13 +119,20 @@ def checkout(request, listing_id):
 
     requested_slots = _slots(request.POST.get("slots"))
     coupon_code = request.POST.get("coupon_code", "").strip().upper()
+    payment_method = request.POST.get("payment_method", "").lower().strip()
+    payment_ref = request.POST.get("payment_ref", "").strip()
     try:
-        order_id = _create_order(request.session["user_id"], listing_id, requested_slots, coupon_code)
+        order_id = _create_order(
+            request.session["user_id"], listing_id, requested_slots, coupon_code,
+            payment_method, payment_ref,
+        )
     except ValueError as exc:
         return render(
             request,
             "marketplace/checkout.html",
-            _checkout_context(listing, requested_slots, coupon_code, str(exc)),
+            _checkout_context(
+                listing, requested_slots, coupon_code, str(exc), payment_method, payment_ref
+            ),
         )
     except Exception:
         messages.error(request, "We could not place your order. Please try again.")
@@ -130,10 +141,14 @@ def checkout(request, listing_id):
     return redirect("order_confirmation", order_id=order_id)
 
 
-def _create_order(buyer_id, listing_id, requested_slots, coupon_code):
-    """Create an order with all dependent records in one database transaction."""
+def _create_order(buyer_id, listing_id, requested_slots, coupon_code, payment_method, payment_ref):
+    """Create an order ready for administrator payment verification."""
     if requested_slots < 1:
         raise ValueError("Choose at least one slot.")
+    if payment_method not in PAYMENT_METHODS:
+        raise ValueError("Choose bKash, Nagad, or Rocket.")
+    if not payment_ref or len(payment_ref) > 60:
+        raise ValueError("Enter a transaction ID of up to 60 characters.")
 
     with transaction.atomic():
         with connection.cursor() as cursor:
@@ -178,15 +193,20 @@ def _create_order(buyer_id, listing_id, requested_slots, coupon_code):
             cursor.execute(
                 """INSERT INTO Orders
                     (buyer_id, listing_id, coupon_id, slots_ordered, unit_price,
-                     discount_amount, total_amount, order_status, payment_status)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending', 'unpaid')""",
-                [buyer_id, listing_id, coupon_id, requested_slots, unit_price, discount, total],
+                     discount_amount, total_amount, order_status, payment_status,
+                     payment_method, payment_ref)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending',
+                           'pending_verification', %s, %s)""",
+                [
+                    buyer_id, listing_id, coupon_id, requested_slots, unit_price, discount,
+                    total, payment_method, payment_ref,
+                ],
             )
             order_id = cursor.lastrowid
             cursor.execute(
                 """INSERT INTO OrderStatusHistory
                     (order_id, old_status, new_status, changed_by, reason)
-                   VALUES (%s, NULL, 'Pending', %s, 'Order placed by buyer')""",
+                   VALUES (%s, NULL, 'Pending', %s, 'Order placed with payment reference')""",
                 [order_id, buyer_id],
             )
             if coupon_id is not None:
@@ -196,9 +216,9 @@ def _create_order(buyer_id, listing_id, requested_slots, coupon_code):
                    VALUES (%s, %s, %s, 'order'), (%s, %s, %s, 'order')""",
                 [
                     buyer_id, f"Order #{order_id} received",
-                    f"Your order for {plan_name} is pending payment.",
+                    f"Your order for {plan_name} is awaiting payment verification.",
                     seller_id, f"New order #{order_id}",
-                    f"A buyer ordered {requested_slots} slot(s) on {plan_name}.",
+                    f"A buyer submitted payment for {requested_slots} slot(s) on {plan_name}.",
                 ],
             )
     return order_id
