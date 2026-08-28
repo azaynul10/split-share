@@ -35,7 +35,15 @@
         <div class="nav-links">
           <a class="nav-link" href="{% url 'browse' %}" style="text-decoration:none">Browse</a>
           <a class="nav-link" href="#how-it-works" style="text-decoration:none">How it works</a>
-          <a class="nav-link" href="{% url 'wishlist' %}" style="text-decoration:none">Saved</a>
+          {% if current_user.is_authenticated %}
+            <a class="nav-link" href="{% url 'wishlist' %}" style="text-decoration:none">Saved</a>
+            {% if current_user.role == 'buyer' %}
+              <a class="nav-link" href="{% url 'buyer_orders' %}" style="text-decoration:none">My orders</a>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
+              <a class="nav-link" href="{% url 'admin_orders' %}" style="text-decoration:none">Order review</a>
+            {% endif %}
+          {% endif %}
         </div>
 
         <div class="nav-actions">
