@@ -3,6 +3,11 @@ Registration, login and logout.
 
 Passwords are hashed with Django's make_password() and verified with
 check_password(). The plaintext password is never stored or logged.
+
+Both successful entry points call session.cycle_key() before writing any
+identity into the session. That discards whatever session the visitor arrived
+with, so a session value fixed before login cannot be replayed afterwards to
+inherit the new privileges.
 """
 
 from django.contrib import messages
@@ -139,6 +144,7 @@ def register(request):
         )
         return render(request, "auth/register.html", {"form": form, "errors": errors})
 
+    request.session.cycle_key()
     request.session["user_id"] = user_id
     request.session["user_name"] = f"{form['first_name']} {form['last_name']}"
     request.session["role"] = form["role"]
@@ -202,6 +208,7 @@ def login_view(request):
             {"email": email, "errors": errors, "next": request.POST.get("next", "")},
         )
 
+    request.session.cycle_key()
     request.session["user_id"] = user["user_id"]
     request.session["user_name"] = f"{user['first_name']} {user['last_name']}"
     request.session["role"] = user["role"]

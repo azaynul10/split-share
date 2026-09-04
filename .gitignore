@@ -26,6 +26,7 @@ db/_hash.txt
 
 # Editors and OS
 .vscode/
+.history/
 .idea/
 *.swp
 .DS_Store

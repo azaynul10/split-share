@@ -10,7 +10,9 @@ Two deliberate choices worth noting:
 
 2. Sessions are stored in a signed cookie rather than a database table.
    This keeps the split_share database at exactly the 12 tables defined in
-   db/schema.sql, with no Django-generated tables mixed in.
+   db/schema.sql, with no Django-generated tables mixed in. The trade-off is
+   that a session cannot be revoked server-side, which is why access control
+   re-reads the user's row on every protected request.
 """
 
 import os
@@ -87,13 +89,18 @@ DATABASES = {
 }
 
 # ---------------------------------------------------------------------------
-# Sessions and flash messages, both cookie-backed so the database stays clean
+# Sessions and flash messages, both cookie-backed so the database stays clean.
+#
+# A signed cookie cannot be revoked from the server, because there is no
+# server-side session record to delete. Two things limit the damage: the
+# lifetime is short and tied to the browser session, and every protected
+# request re-checks the user's row (see marketplace/decorators.py).
 # ---------------------------------------------------------------------------
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 60 * 60 * 8
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
