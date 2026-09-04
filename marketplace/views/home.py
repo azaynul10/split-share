@@ -11,7 +11,7 @@ the landing page can never claim a number the database does not support.
 
 from django.shortcuts import render
 
-from .db_utils import QueryError, fetch_all, fetch_one
+from ..db_utils import QueryError, fetch_all, fetch_one
 
 # One row of headline figures. Each column is its own scalar subquery, which
 # keeps the whole strip to a single round trip.

@@ -7,8 +7,8 @@ from django.db import connection, transaction
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
-from .decorators import role_required_raw
-from .db_utils import QueryError, fetch_one
+from ..decorators import role_required_raw
+from ..db_utils import QueryError, fetch_one
 
 TWO_PLACES = Decimal("0.01")
 

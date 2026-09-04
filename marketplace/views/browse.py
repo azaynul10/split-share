@@ -16,7 +16,7 @@ Two things to note about the SQL here.
 from django.contrib import messages
 from django.shortcuts import redirect, render
 
-from .db_utils import QueryError, fetch_all, fetch_one
+from ..db_utils import QueryError, fetch_all, fetch_one
 
 PAGE_SIZE = 9
 

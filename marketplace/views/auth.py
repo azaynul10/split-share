@@ -17,8 +17,8 @@ from django.core.validators import validate_email
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from .db_utils import QueryError, fetch_one, insert_returning_id
-from .decorators import anonymous_only
+from ..db_utils import QueryError, fetch_one, insert_returning_id
+from ..decorators import anonymous_only
 
 SELECT_USER_BY_EMAIL = """
     SELECT user_id, first_name, last_name, email, password_hash, role, is_active

@@ -5,7 +5,7 @@ from django.db import connection, transaction
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from .decorators import role_required_raw
+from ..decorators import role_required_raw
 
 
 @role_required_raw("buyer")

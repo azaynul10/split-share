@@ -10,8 +10,8 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from .db_utils import QueryError, execute, fetch_all
-from .decorators import login_required_raw
+from ..db_utils import QueryError, execute, fetch_all
+from ..decorators import login_required_raw
 
 SELECT_WISHLIST = """
     SELECT

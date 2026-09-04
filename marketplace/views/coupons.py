@@ -14,7 +14,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from .db_utils import QueryError, fetch_one
+from ..db_utils import QueryError, fetch_one
 
 SELECT_COUPON_BY_CODE = """
     SELECT
