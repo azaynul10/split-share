@@ -2,7 +2,18 @@
 
 from django.urls import path
 
-from .views import auth, browse, coupons, home, orders, reviews, wishlist
+from .views import (
+    auth,
+    browse,
+    coupons,
+    groups,
+    home,
+    notifications,
+    orders,
+    reviews,
+    seller,
+    wishlist,
+)
 
 urlpatterns = [
     # Landing page
@@ -31,4 +42,18 @@ urlpatterns = [
     ),
     # Coupons
     path("coupons/validate/", coupons.validate_coupon_api, name="validate_coupon"),
+    # Notifications
+    path("notifications/", notifications.notifications, name="notifications"),
+    path(
+        "notifications/<int:notification_id>/mark-read/",
+        notifications.mark_notification_read,
+        name="mark_notification_read",
+    ),
+    # Seller
+    path("seller/dashboard/", seller.seller_dashboard, name="seller_dashboard"),
+    # Shared Groups
+    path("groups/", groups.groups_list, name="groups_list"),
+    path("groups/create/", groups.create_group, name="create_group"),
+    path("groups/<int:group_id>/join/", groups.join_group, name="join_group"),
+    path("groups/<int:group_id>/leave/", groups.leave_group, name="leave_group"),
 ]

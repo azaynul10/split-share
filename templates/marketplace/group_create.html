@@ -1,0 +1,63 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Create Shared Group – Sub-Share{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Create a New Group</h1>
+        <p class="mt-2 text-sm text-slate-500">
+            Set up a shared household for one of your active listings.
+        </p>
+    </div>
+
+    <form action="{% url 'create_group' %}" method="post" class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 sm:p-8">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+            <div>
+                <label for="group_name" class="block text-sm font-semibold text-slate-900">Group Name</label>
+                <div class="mt-2">
+                    <input type="text" name="group_name" id="group_name" required maxlength="100" placeholder="e.g. Netflix Dhaka Squad"
+                           class="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                </div>
+            </div>
+
+            <div>
+                <label for="listing_id" class="block text-sm font-semibold text-slate-900">Select Listing</label>
+                <div class="mt-2">
+                    <select name="listing_id" id="listing_id" required
+                            class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                        <option value="">-- Choose one of your active listings --</option>
+                        {% for listing in listings %}
+                            <option value="{{ listing.listing_id }}">
+                                {{ listing.platform_name }} - {{ listing.plan_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="max_members" class="block text-sm font-semibold text-slate-900">Maximum Members</label>
+                <div class="mt-2">
+                    <input type="number" name="max_members" id="max_members" required min="2" max="100" placeholder="4"
+                           class="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50">
+                </div>
+                <p class="mt-2 text-xs text-slate-500">
+                    The total number of people who can join this group (including yourself). Once reached, the group will automatically lock.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-8 flex items-center gap-4 border-t border-slate-100 pt-6">
+            <button type="submit" class="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                Create Group
+            </button>
+            <a href="{% url 'groups_list' %}" class="text-sm font-semibold text-slate-600 transition hover:text-slate-900">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

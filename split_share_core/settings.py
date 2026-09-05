@@ -63,6 +63,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.messages.context_processors.messages",
                 "marketplace.context_processors.current_user",
+                "marketplace.context_processors.unread_notifications_count",
             ],
         },
     },
