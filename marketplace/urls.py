@@ -6,9 +6,12 @@ from . import (
     views_auth,
     views_browse,
     views_coupons,
+    views_groups,
     views_home,
+    views_notifications,
     views_orders,
     views_reviews,
+    views_seller,
     views_wishlist,
 )
 
@@ -39,4 +42,18 @@ urlpatterns = [
     ),
     # Coupons
     path("coupons/validate/", views_coupons.validate_coupon_api, name="validate_coupon"),
+    # Notifications
+    path("notifications/", views_notifications.notifications, name="notifications"),
+    path(
+        "notifications/<int:notification_id>/mark-read/",
+        views_notifications.mark_notification_read,
+        name="mark_notification_read",
+    ),
+    # Seller
+    path("seller/dashboard/", views_seller.seller_dashboard, name="seller_dashboard"),
+    # Shared Groups
+    path("groups/", views_groups.groups_list, name="groups_list"),
+    path("groups/create/", views_groups.create_group, name="create_group"),
+    path("groups/<int:group_id>/join/", views_groups.join_group, name="join_group"),
+    path("groups/<int:group_id>/leave/", views_groups.leave_group, name="leave_group"),
 ]
