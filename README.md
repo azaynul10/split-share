@@ -33,6 +33,7 @@ marketplace/
   urls.py                 route table
 
 split_share_core/         Django settings, root URL conf, WSGI and ASGI entry points
+  telemetry.py            OpenTelemetry setup: request + SQL spans, exporter chosen by env
 templates/                base layout plus the auth and marketplace pages
 manage.py                 Django entry point
 requirements.txt          Python dependencies
@@ -90,6 +91,28 @@ There are no Django migrations to run. The app owns no models, so the schema com
 | `/wishlist/` | saved listings |
 | `/register/`, `/login/`, `/logout/` | authentication |
 | `/coupons/validate/` | JSON endpoint used by the promo code box |
+
+## Observability
+
+Every request produces an OpenTelemetry trace: one server span named after the route
+(`GET browse/`, `POST login/`) with one child span per SQL statement carrying the full
+query text. Logged-in requests are tagged with `enduser.id` and `enduser.role`. Set-up lives
+in `split_share_core/telemetry.py` and runs from `manage.py` and `wsgi.py`.
+
+With no configuration, spans are printed to the `runserver` console one per line, prefixed
+`[otel]`. To ship them to a backend instead, set the standard OTel variables before starting
+the server:
+
+```powershell
+$env:OTEL_EXPORTER_OTLP_ENDPOINT = "https://{env-id}.live.dynatrace.com/api/v2/otlp"
+$env:OTEL_EXPORTER_OTLP_HEADERS  = "Authorization=Api-Token%20dt0c01.XXXX"
+python manage.py runserver
+```
+
+For a local collector use `http://localhost:4318` and omit the headers. Note the `%20`: the
+spec requires header values to be URL-encoded, so the space in `Api-Token <token>` must be
+escaped. `OTEL_SERVICE_NAME` overrides the default `split-share-web`;
+`OTEL_SDK_DISABLED=true` switches tracing off entirely.
 
 ## Demo accounts
 
