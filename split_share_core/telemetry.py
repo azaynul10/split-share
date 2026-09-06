@@ -52,12 +52,20 @@ def setup_telemetry():
     )
     provider = TracerProvider(resource=resource)
 
-    if os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
+    endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if endpoint:
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
         provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+        has_auth = "authorization" in os.environ.get("OTEL_EXPORTER_OTLP_HEADERS", "").lower()
+        print(
+            f"[otel] exporting spans to {endpoint} "
+            f"({'auth header set' if has_auth else 'NO auth header'})",
+            flush=True,
+        )
     else:
         provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter(formatter=_one_line)))
+        print("[otel] OTEL_EXPORTER_OTLP_ENDPOINT not set; printing spans to console", flush=True)
 
     trace.set_tracer_provider(provider)
 

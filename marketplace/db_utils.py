@@ -16,12 +16,22 @@ formatting, so the driver escapes them and SQL injection is not possible.
 import logging
 
 from django.db import connection, transaction
+from opentelemetry import trace
+from opentelemetry.trace import StatusCode
 
 logger = logging.getLogger(__name__)
 
 
 class QueryError(Exception):
     """Raised when a query fails, so views can show a friendly message."""
+
+
+def _record_failure(exc, sql):
+    """Mark the active span as failed; the view will swallow the exception."""
+    span = trace.get_current_span()
+    if span.is_recording():
+        span.record_exception(exc, attributes={"db.statement": " ".join(sql.split())[:500]})
+        span.set_status(StatusCode.ERROR, type(exc).__name__)
 
 
 def dictfetchall(cursor):
@@ -47,6 +57,7 @@ def fetch_all(sql, params=None):
             return dictfetchall(cursor)
     except Exception as exc:
         logger.error("fetch_all failed: %s\nSQL: %s\nParams: %s", exc, sql, params)
+        _record_failure(exc, sql)
         raise QueryError(str(exc)) from exc
 
 
@@ -58,6 +69,7 @@ def fetch_one(sql, params=None):
             return dictfetchone(cursor)
     except Exception as exc:
         logger.error("fetch_one failed: %s\nSQL: %s\nParams: %s", exc, sql, params)
+        _record_failure(exc, sql)
         raise QueryError(str(exc)) from exc
 
 
@@ -70,6 +82,7 @@ def fetch_scalar(sql, params=None, default=None):
             return row[0] if row else default
     except Exception as exc:
         logger.error("fetch_scalar failed: %s\nSQL: %s\nParams: %s", exc, sql, params)
+        _record_failure(exc, sql)
         raise QueryError(str(exc)) from exc
 
 
@@ -82,6 +95,7 @@ def execute(sql, params=None):
                 return cursor.rowcount
     except Exception as exc:
         logger.error("execute failed: %s\nSQL: %s\nParams: %s", exc, sql, params)
+        _record_failure(exc, sql)
         raise QueryError(str(exc)) from exc
 
 
@@ -96,6 +110,7 @@ def insert_returning_id(sql, params=None):
         logger.error(
             "insert_returning_id failed: %s\nSQL: %s\nParams: %s", exc, sql, params
         )
+        _record_failure(exc, sql)
         raise QueryError(str(exc)) from exc
 
 
