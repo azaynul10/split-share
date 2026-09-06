@@ -1,14 +1,21 @@
 """Capture real Django request spans and POST them to the OTLP endpoint, then
 print the raw response including partialSuccess (which the SDK ignores).
 
-Run from the terminal where OTEL_EXPORTER_OTLP_ENDPOINT / _HEADERS are set.
+Proves the export path end to end without touching a running server.
+Run from the project root, in a shell where OTEL_EXPORTER_OTLP_ENDPOINT and
+OTEL_EXPORTER_OTLP_HEADERS are set:
+
+    python tools/otel_selftest.py
 """
 
 import os
+import sys
+from pathlib import Path
 from urllib.parse import unquote
 
 import requests
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "split_share_core.settings")
 
 import django  # noqa: E402
