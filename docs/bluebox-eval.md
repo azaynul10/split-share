@@ -39,11 +39,16 @@ before raising `QueryError`. User-facing behaviour unchanged.
 
 - 25/27 requests flagged `request.is_failed`; Bluebox reports "200/302 to users,
   failed internally" and "recurring, worsening pattern" — accurate.
-- Reported **no exception recorded anywhere**, checking `exception.type`,
-  `exception.message`, `status.message`. The span carries an `exception` event with
-  `OperationalError (2002, ...)` and status message `OperationalError` (verified in the
-  local export). Open question: Dynatrace dropped the event, or Bluebox did not look in
-  `span.events`. Follow-up query pending.
+- First answer: **"no exception recorded anywhere"**, having checked top-level
+  `exception.type`, `exception.message`, `status.message`. Fell back to the same
+  "~4 s timeout/watchdog" hypothesis as incident A.
+- When told to look in `span.events`: found `django.db.utils.OperationalError`,
+  `(2002, "Can't connect to server on 'localhost' (10061)")`, the stack frame
+  `db_utils.py:67 in fetch_one`, and correctly inferred that the calling views catch
+  it and render a normal page. Offered to open a GitHub issue.
+- Net: the evidence was ingested and queryable; the default investigation path did
+  not inspect span events, which is where the OTel spec puts exceptions. One prompt
+  fixed it, but an unattended investigation would have shipped the wrong hypothesis.
 - Still no proactive finding on the Overview page at time of writing.
 
 ## Things that bit us that Bluebox could not see
@@ -68,8 +73,10 @@ before raising `QueryError`. User-facing behaviour unchanged.
 
 ## Open items
 
-- [ ] Follow-up: does Bluebox see `span.events` on the failed spans?
+- [x] Follow-up: does Bluebox see `span.events` on the failed spans? Yes, when asked.
 - [ ] Does a proactive finding ever appear for incident B?
+- [ ] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
+      fix are actionable for a coding agent.
 - [ ] Add OTel logging so `db_utils` `logger.error` lines arrive trace-correlated.
 - [ ] Coupon service split; failures at the service boundary.
 - [ ] Try the Bluebox instrumentation skill on a scratch branch and diff against
