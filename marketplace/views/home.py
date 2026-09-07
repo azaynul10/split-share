@@ -105,6 +105,7 @@ def landing(request):
     stats = dict(EMPTY_STATS)
     categories = []
     featured = []
+    status = 200
 
     try:
         stats = fetch_one(SELECT_LANDING_STATS) or stats
@@ -114,6 +115,7 @@ def landing(request):
         # This page is public and has no place to show a flash message, so a
         # database outage degrades to the static copy instead of an error page.
         stats = dict(EMPTY_STATS)
+        status = 503
 
     for listing in featured:
         listing["cycle_label"] = CYCLE_LABELS.get(
@@ -126,4 +128,4 @@ def landing(request):
         "featured": featured,
         "star_range": range(1, 6),
     }
-    return render(request, "marketplace/home.html", context)
+    return render(request, "marketplace/home.html", context, status=status)

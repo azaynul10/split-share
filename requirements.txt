@@ -2,3 +2,10 @@
 # later, and the MariaDB bundled with XAMPP is 10.4. 4.2 supports MariaDB 10.4.
 Django>=4.2,<5.0
 mysqlclient>=2.2.0
+
+# Observability. Instrumentation packages track the SDK on a separate version
+# line (1.38.x SDK <-> 0.59bx instrumentation); keep the pairs in step.
+opentelemetry-sdk>=1.38.0,<2.0
+opentelemetry-exporter-otlp-proto-http>=1.38.0,<2.0
+opentelemetry-instrumentation-django>=0.59b0,<1.0
+opentelemetry-instrumentation-mysqlclient>=0.59b0,<1.0

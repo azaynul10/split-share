@@ -121,7 +121,9 @@ def register(request):
             messages.error(
                 request, "We could not reach the database. Please try again."
             )
-            return render(request, "auth/register.html", {"form": form, "errors": errors})
+            return render(
+                request, "auth/register.html", {"form": form, "errors": errors}, status=503
+            )
 
     if errors:
         return render(request, "auth/register.html", {"form": form, "errors": errors})
@@ -142,7 +144,9 @@ def register(request):
         messages.error(
             request, "Something went wrong creating your account. Please try again."
         )
-        return render(request, "auth/register.html", {"form": form, "errors": errors})
+        return render(
+            request, "auth/register.html", {"form": form, "errors": errors}, status=503
+        )
 
     request.session.cycle_key()
     request.session["user_id"] = user_id
@@ -188,6 +192,7 @@ def login_view(request):
             request,
             "auth/login.html",
             {"email": email, "errors": {}, "next": request.POST.get("next", "")},
+            status=503,
         )
 
     # The same message is shown whether the email or the password was wrong,
