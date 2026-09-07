@@ -65,6 +65,20 @@ before raising `QueryError`. User-facing behaviour unchanged.
   would waste a pass.
 - Actionable enough to hand to a coding agent as-is.
 
+### Fix and verification (PR #5, merged 7 Sep 14:29 UTC)
+
+- Fix done by Cascade, not Claude Code (CLI was not installed; installed later).
+  Scope turned out to be 4 files (`browse.py`, `home.py`, `wishlist.py`, `auth.py`),
+  not the 1 + 5 guessed in the issue. `status=503` on degraded renders, redirects
+  left at 302, no metric counter invented. User-facing pages unchanged.
+- Asked "Is issue #4 fixed?": Bluebox read the merged PR and both commits, summarised
+  the code change accurately (including the `status` variable and why redirects stay
+  302), then confirmed from live spans: `GET browse/` 503 + `is_failed=true` x4,
+  `GET home` 503 x1, vs 200s before. Correctly flagged that the DB itself was still
+  down. Still repeated the `DATABASES['default']['HOST']` red herring.
+- That is the complete loop: detect, diagnose, issue, fix, verify. About 3 hours of
+  wall-clock, most of it spent on the orphaned-process problem, not on Bluebox.
+
 ## Things that bit us that Bluebox could not see
 
 - Six orphaned `runserver` processes sharing `:8000`. Django sets `SO_REUSEADDR`;
@@ -91,8 +105,39 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - [ ] Does a proactive finding ever appear for incident B?
 - [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
       fix are actionable for a coding agent. Yes; see issue #4 notes.
-- [ ] Hand issue #4 to Claude Code on a branch; review the PR it produces.
+- [x] Fix issue #4 (done by Cascade; Claude Code was not installed). PR #5 merged.
+- [x] Bluebox verified the fix against live traffic.
 - [ ] Add OTel logging so `db_utils` `logger.error` lines arrive trace-correlated.
 - [ ] Coupon service split; failures at the service boundary.
 - [ ] Try the Bluebox instrumentation skill on a scratch branch and diff against
-      `feature/otel`.
+      `feature/otel` (Claude Code now installed; rerun `bluebox setup` first).
+
+## Summary for Andrew (draft)
+
+**Worked well**
+
+- Never invented data. Under zero traffic it said so and listed exactly what it had.
+- Found a fully swallowed DB outage from absence alone (0 DB spans, fixed ~4 s latency,
+  all 200s) before the app emitted any error signal.
+- Once exception events were on the span, it produced the exception, the failing
+  frame (`db_utils.py:67`), and the correct explanation of why users saw 200/302.
+- The GitHub issue it opened quoted real code from the repo, proposed the right fix
+  shape (keep the friendly page, return 503), and did not propose the naive fix.
+- After the PR merged, it read the diff and confirmed the fix from live spans.
+- Shows its DQL. Everything it claimed was checkable, and I checked it.
+
+**Gaps**
+
+- Proactive detection never fired. Two outages, 93% failure rate for 10 minutes, and
+  the Overview stayed quiet; every finding above required a question.
+- Default investigation did not look in `span.events`, so its first answer to "what
+  was the exception?" was "none recorded" while the exception was on the span.
+  One nudge fixed it, but unattended it would have shipped the wrong hypothesis.
+- Issue #4 mis-scoped the affected files (3 of 5 guesses wrong, 3 real ones missed)
+  and included a config red herring it kept repeating after the fix.
+- The onboarding assumes an installed coding agent for instrumentation; with none
+  detected it silently installed no skills. A hand-rolled OTel setup worked fine, but
+  the docs' `.env.otel.bluebox-template` never appeared.
+- It cannot see process-level problems. Six orphaned `runserver` processes on one
+  port cost more time than everything else combined, and the only telemetry symptom
+  ("bootstrap spans but never request spans") was misread as an instrumentation gap.
