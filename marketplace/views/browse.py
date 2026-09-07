@@ -241,6 +241,7 @@ def browse(request):
     categories = []
     price_bounds = {"min_price": None, "max_price": None}
     wishlist_ids = set()
+    status = 200
 
     try:
         total_row = fetch_one(count_sql, where_params + having_params)
@@ -267,6 +268,7 @@ def browse(request):
         )
         total_pages = 1
         page = 1
+        status = 503
 
     for listing in listings:
         listing["in_wishlist"] = listing["listing_id"] in wishlist_ids
@@ -305,7 +307,7 @@ def browse(request):
             ]
         ),
     }
-    return render(request, "marketplace/browse.html", context)
+    return render(request, "marketplace/browse.html", context, status=status)
 
 
 # ---------------------------------------------------------------------------

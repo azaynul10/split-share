@@ -74,7 +74,7 @@ def wishlist(request):
             listing["in_wishlist"] = True
     except QueryError:
         messages.error(request, "We could not load your saved listings.")
-        saved = []
+        return render(request, "marketplace/wishlist.html", {"listings": []}, status=503)
 
     return render(request, "marketplace/wishlist.html", {"listings": saved})
 
