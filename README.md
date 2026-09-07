@@ -24,10 +24,17 @@ db/
 
 marketplace/
   db_utils.py             cursor helpers; every query in the project goes through here
-  views_auth.py           register, login, logout
-  views_browse.py         catalogue, search, filters, sorting, listing detail
-  views_wishlist.py       saved listings
-  views_coupons.py        promo code validation
+  views/
+    auth.py               register, login, logout
+    browse.py             catalogue, search, filters, sorting, listing detail
+    home.py               landing page
+    orders.py             checkout, payment, order review
+    wishlist.py           saved listings
+    coupons.py            promo code validation
+    reviews.py            listing reviews
+    notifications.py      in-app notifications
+    seller.py             seller dashboard
+    groups.py             sharing groups
   decorators.py           login_required_raw, anonymous_only
   context_processors.py   session user exposed to every template
   urls.py                 route table

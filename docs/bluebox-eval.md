@@ -51,6 +51,20 @@ before raising `QueryError`. User-facing behaviour unchanged.
   fixed it, but an unattended investigation would have shipped the wrong hypothesis.
 - Still no proactive finding on the Overview page at time of writing.
 
+### GitHub issue #4 (opened by Bluebox on request)
+
+- Cites `marketplace/views/browse.py` with faithful quotes of the two `except QueryError`
+  blocks and `db_utils.py:67`; it read the repo, not just the trace.
+- Root cause stated on both layers: DB refused, and views render 200/302 regardless.
+- Suggested fix is the right shape: keep the friendly page, return `status=503`, add a
+  metric on the except branch. Not the naive "stop catching the exception".
+- Inaccuracies: calls the 4.09 s a "hard timeout ceiling" (it is the OS connect-refused
+  backoff); lists `seller.py`, `groups.py`, `reviews.py` as likely having the same
+  pattern (they do not) while missing `auth.py`, `coupons.py`, `home.py` (they do).
+  Hedged with "likely", so not a hallucination, but a coding agent acting on it
+  would waste a pass.
+- Actionable enough to hand to a coding agent as-is.
+
 ## Things that bit us that Bluebox could not see
 
 - Six orphaned `runserver` processes sharing `:8000`. Django sets `SO_REUSEADDR`;
@@ -75,8 +89,9 @@ before raising `QueryError`. User-facing behaviour unchanged.
 
 - [x] Follow-up: does Bluebox see `span.events` on the failed spans? Yes, when asked.
 - [ ] Does a proactive finding ever appear for incident B?
-- [ ] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
-      fix are actionable for a coding agent.
+- [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
+      fix are actionable for a coding agent. Yes; see issue #4 notes.
+- [ ] Hand issue #4 to Claude Code on a branch; review the PR it produces.
 - [ ] Add OTel logging so `db_utils` `logger.error` lines arrive trace-correlated.
 - [ ] Coupon service split; failures at the service boundary.
 - [ ] Try the Bluebox instrumentation skill on a scratch branch and diff against
