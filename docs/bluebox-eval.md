@@ -131,8 +131,15 @@ before raising `QueryError`. User-facing behaviour unchanged.
   Bluebox investigation it created, and the issue content is accurate. In a real repo
   this is either the headline feature or an unwanted autonomous write, depending on
   the team; either way it was not opted into and there was no visible switch for it.
-- An Investigation was created (linked from #6). Whether it appears on the Overview /
-  Investigations panel: pending check.
+- #6 links to `investigations/57d267ca...`, but the Investigations panel ("Monitor SRE
+  investigations: signals, hypotheses, escalations, and resolution") still shows "No
+  investigations yet" across All / Open / Investigating / Resolved. The product
+  detected and escalated an outage and its own investigation surface shows nothing.
+- Asked why the routine filed an issue: "a judgment call made autonomously by that one
+  session", 1 of 14 runs, same prompt and tools each time. No setting controls it; the
+  only levers are a negative instruction in the prompt or restricting the GitHub
+  connection globally. Write scope is governed by prompt wording and model judgment,
+  not policy.
 - **No notification of any kind**: no email, no push. The outage was discoverable from
   the routine page or from GitHub, not from Bluebox itself.
 - Fourth repetition of the `DATABASES['default']['HOST']` suggestion, this time paired
@@ -165,8 +172,8 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - [x] Accept the offer to configure an alert: it cannot; tools are read-only.
 - [x] Create a Routine (every 5 min). Done; ran 12 times against no traffic.
 - [x] Routine live test: detected within one cycle, filed issue #6 unprompted.
-- [ ] Ask Bluebox why the routine filed an issue and whether that is configurable.
-- [ ] Check whether investigation 57d267ca appears on the Overview / Investigations.
+- [x] Ask Bluebox why the routine filed an issue: autonomous, 1 of 14, no toggle.
+- [x] Check whether investigation 57d267ca appears on Investigations: it does not.
 - [ ] Disable the routine; close #6 as an intentional test.
 - [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
       fix are actionable for a coding agent. Yes; see issue #4 notes.
@@ -202,8 +209,11 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - Routines have no notification channel. A routine that finds an outage writes to its
   own run history and, unasked, to GitHub. Nobody gets paged.
 - The routine filed a GitHub issue when the prompt only said "report". Accurate,
-  deduplicated, and unrequested. Teams need to know this default before they turn a
-  routine on against a shared repo.
+  deduplicated, unrequested, and non-deterministic: 1 run in 14 did it, and Bluebox
+  confirms there is no setting that governs it, only prompt wording. A per-routine
+  "may open issues" switch is the missing control.
+- The Investigations panel stayed at "No investigations yet" through two outages, a
+  detected recurrence, and an issue that links to an investigation ID.
 - Default investigation did not look in `span.events`, so its first answer to "what
   was the exception?" was "none recorded" while the exception was on the span.
   One nudge fixed it, but unattended it would have shipped the wrong hypothesis.
