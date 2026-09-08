@@ -94,7 +94,17 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - (1)-(3) are fair and specific. (4) directly contradicts the Overview copy. Either the
   UI overstates what the product does, or the agent understates it; for an "AI SRE"
   this is the claim that matters most.
-- Offered to configure a latency/error-rate alert now that 503s are visible.
+- Offered to configure a latency/error-rate alert now that 503s are visible. Asked to
+  do it: "I did not configure anything — and I can't". Its tools are read-only; it
+  drafted a rule definition and DQL for a human to enter in Dynatrace instead. Honest,
+  but it means every proactive capability is a manual setup step.
+- It surfaced **Routines** (Setup > Routines): a scheduled prompt that runs on an
+  interval. This is the proactive-detection mechanism. Nothing in onboarding or the
+  Overview mentioned it in two days of "All clear".
+- The drafted DQL uses `http.response.status_code` with `startsWith(..., "5")`; our
+  spans emit `http.status_code` (older semconv) and the field is numeric. Its own
+  earlier queries did return 503s, so Dynatrace probably normalises, but the rule
+  should be tested before anyone relies on it.
 
 ## Things that bit us that Bluebox could not see
 
@@ -120,8 +130,10 @@ before raising `QueryError`. User-facing behaviour unchanged.
 
 - [x] Follow-up: does Bluebox see `span.events` on the failed spans? Yes, when asked.
 - [x] Does a proactive finding ever appear for incident B? No, confirmed at 24 h.
-- [ ] Accept the offer: let Bluebox configure a 5xx-rate alert, then one more outage
-      burst to see whether rule-based detection fires and whether it self-reports.
+- [x] Accept the offer to configure an alert: it cannot; tools are read-only.
+- [ ] Create a Routine (every 5 min, "report if >10% 5xx or any ERROR span, else
+      nothing"), run one outage burst, record detection lag and where the report
+      surfaces.
 - [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
       fix are actionable for a coding agent. Yes; see issue #4 notes.
 - [x] Fix issue #4 (done by Cascade; Claude Code was not installed). PR #5 merged.
@@ -151,7 +163,8 @@ before raising `QueryError`. User-facing behaviour unchanged.
   finding after 24 h; every result above required a question. Bluebox's own account:
   sparse traffic defeats baselines, no SLO configured, and "I only act when queried" —
   while the Overview page says "actively watching your environment". Fix the copy or
-  fix the behaviour; right now a new user would trust the wrong one.
+  fix the behaviour; right now a new user would trust the wrong one. The mechanism
+  that would make the copy true (Routines) exists but is never suggested.
 - Default investigation did not look in `span.events`, so its first answer to "what
   was the exception?" was "none recorded" while the exception was on the span.
   One nudge fixed it, but unattended it would have shipped the wrong hypothesis.
