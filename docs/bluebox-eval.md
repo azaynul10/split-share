@@ -106,6 +106,21 @@ before raising `QueryError`. User-facing behaviour unchanged.
   earlier queries did return 503s, so Dynatrace probably normalises, but the rule
   should be tested before anyone relies on it.
 
+### Routine dry run (8 Sep, 12 runs, 15:54-16:50 local)
+
+- Custom schedule accepts 5-minute intervals. Each run took 27 s to 1 min. Triggers
+  available: schedule or GitHub event. Advanced has timezone, start/end, max runs and
+  overlap policy. **No notification destination** of any kind.
+- No server was running with the token, so every run saw zero spans. The routine
+  refused to answer "no issues" on empty data and reported the gap instead, with
+  "either the service had no traffic, or it stopped emitting traces / is down". Good
+  judgement; that is exactly what a human on-call would want.
+- But that report lived only in the routine's run history. Overview still "All clear",
+  Investigations still empty. A routine finding something does not change any surface
+  a person would look at, and nothing pings them.
+- Max occurrences hit; routine stopped. Real test (outage while routine is active)
+  still pending.
+
 ## Things that bit us that Bluebox could not see
 
 - Six orphaned `runserver` processes sharing `:8000`. Django sets `SO_REUSEADDR`;
@@ -131,9 +146,9 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - [x] Follow-up: does Bluebox see `span.events` on the failed spans? Yes, when asked.
 - [x] Does a proactive finding ever appear for incident B? No, confirmed at 24 h.
 - [x] Accept the offer to configure an alert: it cannot; tools are read-only.
-- [ ] Create a Routine (every 5 min, "report if >10% 5xx or any ERROR span, else
-      nothing"), run one outage burst, record detection lag and where the report
-      surfaces.
+- [x] Create a Routine (every 5 min). Done; ran 12 times against no traffic.
+- [ ] Re-enable the routine (clear max occurrences), start the server with `.env.otel`,
+      run one outage burst, record detection lag and where the report surfaces.
 - [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
       fix are actionable for a coding agent. Yes; see issue #4 notes.
 - [x] Fix issue #4 (done by Cascade; Claude Code was not installed). PR #5 merged.

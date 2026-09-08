@@ -107,19 +107,22 @@ query text. Logged-in requests are tagged with `enduser.id` and `enduser.role`. 
 in `split_share_core/telemetry.py` and runs from `manage.py` and `wsgi.py`.
 
 With no configuration, spans are printed to the `runserver` console one per line, prefixed
-`[otel]`. To ship them to a backend instead, set the standard OTel variables before starting
-the server:
+`[otel]`. To ship them to a backend instead, copy `.env.otel.example` to `.env.otel` (which
+is gitignored) and paste the ingest token; `telemetry.py` reads it at startup. The first
+line the server prints tells you which mode it is in:
 
-```powershell
-$env:OTEL_EXPORTER_OTLP_ENDPOINT = "https://{env-id}.live.dynatrace.com/api/v2/otlp"
-$env:OTEL_EXPORTER_OTLP_HEADERS  = "Authorization=Api-Token%20dt0c01.XXXX"
-python manage.py runserver
+```
+[otel] exporting spans to https://njh16107.live.dynatrace.com/api/v2/otlp (auth header set)
 ```
 
-For a local collector use `http://localhost:4318` and omit the headers. Note the `%20`: the
-spec requires header values to be URL-encoded, so the space in `Api-Token <token>` must be
-escaped. `OTEL_SERVICE_NAME` overrides the default `split-share-web`;
-`OTEL_SDK_DISABLED=true` switches tracing off entirely.
+The same variables can be set in the shell instead, and shell values take precedence over
+the file. For a local collector use `http://localhost:4318` and omit the headers. Bluebox
+tokens (`dt0s16.…`) use `Authorization=Bearer <token>`; classic Dynatrace API tokens
+(`dt0c01.…`) use `Authorization=Api-Token <token>`. A literal space is fine.
+`OTEL_SERVICE_NAME` overrides the default `split-share-web`; `OTEL_SDK_DISABLED=true`
+switches tracing off entirely. `python tools/otel_selftest.py` sends a handful of real
+request spans and prints the raw OTLP response, which is the quickest way to prove the
+token and endpoint work.
 
 ## Demo accounts
 

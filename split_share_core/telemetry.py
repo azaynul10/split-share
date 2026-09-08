@@ -17,17 +17,35 @@ change and not a code change:
     OTEL_SERVICE_NAME             defaults to split-share-web
     OTEL_SDK_DISABLED=true        turn everything off
 
+These can be set in the shell or, more conveniently, in a `.env.otel` file at the
+project root (gitignored; copy `.env.otel.example`). Shell variables win over the
+file, so a one-off `OTEL_SDK_DISABLED=true` still works.
+
 If OTEL_EXPORTER_OTLP_ENDPOINT is not set, spans are printed to the console so
 the instrumentation can be verified with nothing else running.
 """
 
 import os
+from pathlib import Path
 
 _configured = False
 
 
+def _load_env_file():
+    path = Path(__file__).resolve().parent.parent / ".env.otel"
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 def setup_telemetry():
     global _configured
+    _load_env_file()
     if _configured or os.environ.get("OTEL_SDK_DISABLED", "").lower() == "true":
         return
     _configured = True
