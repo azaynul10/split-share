@@ -79,6 +79,23 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - That is the complete loop: detect, diagnose, issue, fix, verify. About 3 hours of
   wall-clock, most of it spent on the orphaned-process problem, not on Bluebox.
 
+## Proactive detection (checked 8 Sep, ~24 h after incident B)
+
+- Overview: "All clear — nothing unusual detected. Bluebox is actively watching your
+  environment." Investigations: none. "Telemetry delayed" badge still showing.
+- Asked directly, Bluebox confirmed it detected, flagged, and opened nothing on its own
+  for either incident, and that Dynatrace's own problem detection raised zero problems
+  in 3 days. It also said it noticed nothing during earlier questions in the same
+  window "even though the anomalous data was already there to see".
+- Its explanation: (1) anomaly detection needs a baseline and sustained signal; this
+  service is sparse and bursty; (2) no SLO or error-rate alert is configured; (3) the
+  pre-fix 200s defeated status-code detection anyway; (4) "I don't run continuous
+  background monitoring — I only act when queried."
+- (1)-(3) are fair and specific. (4) directly contradicts the Overview copy. Either the
+  UI overstates what the product does, or the agent understates it; for an "AI SRE"
+  this is the claim that matters most.
+- Offered to configure a latency/error-rate alert now that 503s are visible.
+
 ## Things that bit us that Bluebox could not see
 
 - Six orphaned `runserver` processes sharing `:8000`. Django sets `SO_REUSEADDR`;
@@ -102,7 +119,9 @@ before raising `QueryError`. User-facing behaviour unchanged.
 ## Open items
 
 - [x] Follow-up: does Bluebox see `span.events` on the failed spans? Yes, when asked.
-- [ ] Does a proactive finding ever appear for incident B?
+- [x] Does a proactive finding ever appear for incident B? No, confirmed at 24 h.
+- [ ] Accept the offer: let Bluebox configure a 5xx-rate alert, then one more outage
+      burst to see whether rule-based detection fires and whether it self-reports.
 - [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
       fix are actionable for a coding agent. Yes; see issue #4 notes.
 - [x] Fix issue #4 (done by Cascade; Claude Code was not installed). PR #5 merged.
@@ -128,8 +147,11 @@ before raising `QueryError`. User-facing behaviour unchanged.
 
 **Gaps**
 
-- Proactive detection never fired. Two outages, 93% failure rate for 10 minutes, and
-  the Overview stayed quiet; every finding above required a question.
+- Proactive detection never fired. Two outages, 93% failure rate for 10 minutes, no
+  finding after 24 h; every result above required a question. Bluebox's own account:
+  sparse traffic defeats baselines, no SLO configured, and "I only act when queried" —
+  while the Overview page says "actively watching your environment". Fix the copy or
+  fix the behaviour; right now a new user would trust the wrong one.
 - Default investigation did not look in `span.events`, so its first answer to "what
   was the exception?" was "none recorded" while the exception was on the span.
   One nudge fixed it, but unattended it would have shipped the wrong hypothesis.
