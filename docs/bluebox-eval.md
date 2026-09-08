@@ -118,8 +118,25 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - But that report lived only in the routine's run history. Overview still "All clear",
   Investigations still empty. A routine finding something does not change any surface
   a person would look at, and nothing pings them.
-- Max occurrences hit; routine stopped. Real test (outage while routine is active)
-  still pending.
+- Max occurrences hit; routine stopped.
+
+### Routine live test (8 Sep, outage 13:1x-13:22 UTC)
+
+- Routine run at 13:22:27Z reported: `GET browse/` 13/13 returned 503,
+  `OperationalError (2002, ... 10061)` on every span, linked to #4, inferred the #4
+  fix was in place from the 503s, and stated the DB itself was still down. Detection
+  lag under 10 minutes (one routine cycle).
+- **It filed GitHub issue #6 on its own.** The prompt said "report"; nothing asked for
+  a write action. It checked for an existing open issue first (dedupe), linked the
+  Bluebox investigation it created, and the issue content is accurate. In a real repo
+  this is either the headline feature or an unwanted autonomous write, depending on
+  the team; either way it was not opted into and there was no visible switch for it.
+- An Investigation was created (linked from #6). Whether it appears on the Overview /
+  Investigations panel: pending check.
+- **No notification of any kind**: no email, no push. The outage was discoverable from
+  the routine page or from GitHub, not from Bluebox itself.
+- Fourth repetition of the `DATABASES['default']['HOST']` suggestion, this time paired
+  with "confirm the MySQL service is running", which is the correct one.
 
 ## Things that bit us that Bluebox could not see
 
@@ -147,8 +164,10 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - [x] Does a proactive finding ever appear for incident B? No, confirmed at 24 h.
 - [x] Accept the offer to configure an alert: it cannot; tools are read-only.
 - [x] Create a Routine (every 5 min). Done; ran 12 times against no traffic.
-- [ ] Re-enable the routine (clear max occurrences), start the server with `.env.otel`,
-      run one outage burst, record detection lag and where the report surfaces.
+- [x] Routine live test: detected within one cycle, filed issue #6 unprompted.
+- [ ] Ask Bluebox why the routine filed an issue and whether that is configurable.
+- [ ] Check whether investigation 57d267ca appears on the Overview / Investigations.
+- [ ] Disable the routine; close #6 as an intentional test.
 - [x] Let Bluebox open the GitHub issue; judge whether the evidence and suggested
       fix are actionable for a coding agent. Yes; see issue #4 notes.
 - [x] Fix issue #4 (done by Cascade; Claude Code was not installed). PR #5 merged.
@@ -174,12 +193,17 @@ before raising `QueryError`. User-facing behaviour unchanged.
 
 **Gaps**
 
-- Proactive detection never fired. Two outages, 93% failure rate for 10 minutes, no
-  finding after 24 h; every result above required a question. Bluebox's own account:
-  sparse traffic defeats baselines, no SLO configured, and "I only act when queried" —
-  while the Overview page says "actively watching your environment". Fix the copy or
-  fix the behaviour; right now a new user would trust the wrong one. The mechanism
-  that would make the copy true (Routines) exists but is never suggested.
+- Out of the box, proactive detection does not exist. Two outages, 93% failure rate
+  for 10 minutes, nothing after 24 h; the Overview said "actively watching your
+  environment" the whole time while the agent itself said "I only act when queried".
+  The mechanism that makes the copy true, Routines, is never suggested by onboarding
+  or the Overview. Once a 5-minute routine was configured by hand, it detected the
+  next outage within one cycle with the right exception and route.
+- Routines have no notification channel. A routine that finds an outage writes to its
+  own run history and, unasked, to GitHub. Nobody gets paged.
+- The routine filed a GitHub issue when the prompt only said "report". Accurate,
+  deduplicated, and unrequested. Teams need to know this default before they turn a
+  routine on against a shared repo.
 - Default investigation did not look in `span.events`, so its first answer to "what
   was the exception?" was "none recorded" while the exception was on the span.
   One nudge fixed it, but unattended it would have shipped the wrong hypothesis.
