@@ -133,8 +133,9 @@ before raising `QueryError`. User-facing behaviour unchanged.
   the team; either way it was not opted into and there was no visible switch for it.
 - #6 links to `investigations/57d267ca...`, but the Investigations panel ("Monitor SRE
   investigations: signals, hypotheses, escalations, and resolution") still shows "No
-  investigations yet" across All / Open / Investigating / Resolved. The product
-  detected and escalated an outage and its own investigation surface shows nothing.
+  investigations yet" across All / Open / Investigating / Resolved. Following the link
+  from #6 directly opens an empty page. The product detected and escalated an outage
+  and its own investigation surface shows nothing.
 - Asked why the routine filed an issue: "a judgment call made autonomously by that one
   session", 1 of 14 runs, same prompt and tools each time. No setting controls it; the
   only levers are a negative instruction in the prompt or restricting the GitHub
