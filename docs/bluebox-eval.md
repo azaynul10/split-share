@@ -133,8 +133,9 @@ before raising `QueryError`. User-facing behaviour unchanged.
   the team; either way it was not opted into and there was no visible switch for it.
 - #6 links to `investigations/57d267ca...`, but the Investigations panel ("Monitor SRE
   investigations: signals, hypotheses, escalations, and resolution") still shows "No
-  investigations yet" across All / Open / Investigating / Resolved. The product
-  detected and escalated an outage and its own investigation surface shows nothing.
+  investigations yet" across All / Open / Investigating / Resolved. Following the link
+  from #6 directly opens an empty page. The product detected and escalated an outage
+  and its own investigation surface shows nothing.
 - Asked why the routine filed an issue: "a judgment call made autonomously by that one
   session", 1 of 14 runs, same prompt and tools each time. No setting controls it; the
   only levers are a negative instruction in the prompt or restricting the GitHub
@@ -144,6 +145,26 @@ before raising `QueryError`. User-facing behaviour unchanged.
   the routine page or from GitHub, not from Bluebox itself.
 - Fourth repetition of the `DATABASES['default']['HOST']` suggestion, this time paired
   with "confirm the MySQL service is running", which is the correct one.
+
+## Phase 2: coupon service split (9 Sep)
+
+- `coupon_service/` (Flask, :8001) owns promo-code pre-checks; Django calls it over HTTP
+  with a 2 s timeout. Refused -> 503, timeout -> 504, upstream 5xx -> 502, all recorded
+  on the span. Trace context propagates via the requests instrumentor. Fault switch at
+  `/_fault?mode=slow|error|none`. Branch `feature/coupon-service`.
+- First question, on a single 502 event: Bluebox followed the trace across the boundary,
+  named `peer.service: split-share-coupons`, the downstream `POST /validate` 500, the
+  `CouponServiceError`, and the honest 502. Said explicitly the fault is downstream, not
+  the web app or the database. Correct on every point.
+- It found a real bug from telemetry: both services reported `dt.service.name:
+  split-share-web`. Cause was `OTEL_SERVICE_NAME` in the shared `.env.otel` template
+  overriding the coupon service's default. Its guess ("missing OTEL_SERVICE_NAME on the
+  dependency") had the mechanism inverted but the location right. Fixed in 1f4ae51.
+- Declined to file an issue: one event, and no branch it checked contained the code. It
+  searched `main` and `feature/otel` only; the code was on `feature/coupon-service`.
+  Reasonable restraint, and a different call from the routine that filed #6.
+- Full three-mode test (slow / error / down, 5 attempts each) pending, after the service
+  name fix and the PR merge.
 
 ## Things that bit us that Bluebox could not see
 

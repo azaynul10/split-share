@@ -43,16 +43,19 @@ def _load_env_file():
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
-def setup_telemetry():
+def configure_tracing(default_service_name):
+    """Install a tracer provider and exporter. Returns False if tracing is off.
+
+    Shared by the Django app and the coupon service; each passes its own
+    default service name, which OTEL_SERVICE_NAME can still override.
+    """
     global _configured
     _load_env_file()
     if _configured or os.environ.get("OTEL_SDK_DISABLED", "").lower() == "true":
-        return
+        return False
     _configured = True
 
     from opentelemetry import trace
-    from opentelemetry.instrumentation.django import DjangoInstrumentor
-    from opentelemetry.instrumentation.mysqlclient import MySQLClientInstrumentor
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
@@ -63,7 +66,7 @@ def setup_telemetry():
 
     resource = Resource.create(
         {
-            "service.name": os.environ.get("OTEL_SERVICE_NAME", "split-share-web"),
+            "service.name": os.environ.get("OTEL_SERVICE_NAME", default_service_name),
             "service.version": os.environ.get("OTEL_SERVICE_VERSION", "dev"),
             "deployment.environment": os.environ.get("DEPLOYMENT_ENV", "local"),
         }
@@ -86,12 +89,24 @@ def setup_telemetry():
         print("[otel] OTEL_EXPORTER_OTLP_ENDPOINT not set; printing spans to console", flush=True)
 
     trace.set_tracer_provider(provider)
+    return True
+
+
+def setup_telemetry():
+    """Django entry point: provider plus request, SQL and outbound HTTP spans."""
+    if not configure_tracing("split-share-web"):
+        return
+
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.mysqlclient import MySQLClientInstrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
     DjangoInstrumentor().instrument(response_hook=_tag_user)
     MySQLClientInstrumentor().instrument(
         enable_commenter=False,
         capture_parameters=False,
     )
+    RequestsInstrumentor().instrument()
 
 
 def _tag_user(span, request, response):
