@@ -123,3 +123,12 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_CHARSET = "utf-8"
+
+# ---------------------------------------------------------------------------
+# Coupon service
+# Promo-code pre-checks are delegated to a separate process (coupon_service/).
+# The timeout is deliberately short: a slow coupon check should fail fast and
+# visibly rather than hold the listing page hostage.
+# ---------------------------------------------------------------------------
+COUPON_SERVICE_URL = os.environ.get("COUPON_SERVICE_URL", "http://127.0.0.1:8001").rstrip("/")
+COUPON_SERVICE_TIMEOUT = float(os.environ.get("COUPON_SERVICE_TIMEOUT", "2"))

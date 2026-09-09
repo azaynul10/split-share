@@ -30,7 +30,7 @@ marketplace/
     home.py               landing page
     orders.py             checkout, payment, order review
     wishlist.py           saved listings
-    coupons.py            promo code validation
+    coupons.py            promo code endpoint; calls the coupon service over HTTP
     reviews.py            listing reviews
     notifications.py      in-app notifications
     seller.py             seller dashboard
@@ -39,8 +39,12 @@ marketplace/
   context_processors.py   session user exposed to every template
   urls.py                 route table
 
+coupon_service/           separate Flask process that owns promo-code validation
+  app.py                  POST /validate, GET /health, GET /_fault (demo fault injection)
+  validation.py           the three coupon gates, storage-agnostic
+
 split_share_core/         Django settings, root URL conf, WSGI and ASGI entry points
-  telemetry.py            OpenTelemetry setup: request + SQL spans, exporter chosen by env
+  telemetry.py            OpenTelemetry setup shared by both processes; exporter chosen by env
 templates/                base layout plus the auth and marketplace pages
 manage.py                 Django entry point
 requirements.txt          Python dependencies
@@ -83,10 +87,16 @@ MySQL has to be listening before Django starts, otherwise the first request fail
 
 ```powershell
 pip install -r requirements.txt
-python manage.py runserver
+python -m coupon_service          # terminal 1, listens on :8001
+python manage.py runserver        # terminal 2, listens on :8000
 ```
 
 Then open http://127.0.0.1:8000. The catalogue is at `/browse/`.
+
+The coupon service is optional for everything except the promo code box on the listing
+page. If it is not running, that box reports "We could not check that code right now" and
+the endpoint returns 503; the rest of the site is unaffected. Checkout does its own coupon
+check inside the order transaction and never calls the service.
 
 There are no Django migrations to run. The app owns no models, so the schema comes only from
 `db/schema.sql`.
@@ -97,7 +107,34 @@ There are no Django migrations to run. The app owns no models, so the schema com
 | `/listing/<id>/` | listing detail, reviews and promo code box |
 | `/wishlist/` | saved listings |
 | `/register/`, `/login/`, `/logout/` | authentication |
-| `/coupons/validate/` | JSON endpoint used by the promo code box |
+| `/coupons/validate/` | JSON endpoint used by the promo code box; proxies to the coupon service |
+
+### Coupon service
+
+`marketplace/views/coupons.py` reads the listing price locally, then posts the code and
+subtotal to `COUPON_SERVICE_URL` (default `http://127.0.0.1:8001`) with a
+`COUPON_SERVICE_TIMEOUT` of 2 seconds. Each way the call can fail maps to its own status,
+and the failure is recorded on the request span:
+
+| Coupon service state | `/coupons/validate/` returns |
+|---|---|
+| healthy | the service's own response, normally 200 |
+| not running / unreachable | 503 |
+| responding slower than the timeout | 504 |
+| returning 5xx | 502 |
+
+The service has a demo-only fault switch for exercising those paths without touching code:
+
+```
+http://127.0.0.1:8001/_fault?mode=slow     sleeps 5 s on every /validate (past the timeout)
+http://127.0.0.1:8001/_fault?mode=error    raises inside /validate, returns 500
+http://127.0.0.1:8001/_fault?mode=none     back to normal
+http://127.0.0.1:8001/health               200 when its database answers, 503 otherwise
+```
+
+Stopping the process covers the third case. All three show up in traces as one trace that
+starts at `POST coupons/validate/` in `split-share-web` and continues into
+`split-share-coupons`, with `status = ERROR` on both sides of the boundary.
 
 ## Observability
 
