@@ -163,8 +163,14 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - Declined to file an issue: one event, and no branch it checked contained the code. It
   searched `main` and `feature/otel` only; the code was on `feature/coupon-service`.
   Reasonable restraint, and a different call from the routine that filed #6.
+- Asked "which service is at fault, the promo box has been failing today" before any
+  failures had been generated. Bluebox rejected the premise: two requests in 3 days, one
+  502 yesterday, one 200 a minute ago, "I'd hold off on treating this as an active
+  incident". Checked logs for coupon mentions too. Correct refusal to invent a pattern.
+- Same answer said `main` still lacks the coupon code ~10 min after PR #7 merged. Either a
+  cached repo view or a missed check; re-verification pending.
 - Full three-mode test (slow / error / down, 5 attempts each) pending, after the service
-  name fix and the PR merge.
+  name fix.
 
 ## Things that bit us that Bluebox could not see
 
