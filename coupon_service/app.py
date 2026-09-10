@@ -69,14 +69,23 @@ def _record_failure(exc):
         span.set_status(StatusCode.ERROR, type(exc).__name__)
 
 
+def _exported_service_name():
+    resource = getattr(trace.get_tracer_provider(), "resource", None)
+    if resource is None:
+        return None
+    return resource.attributes.get("service.name")
+
+
 @app.get("/health")
 def health():
+    body = {"status": "ok", "service": _exported_service_name(), "fault": FAULT["mode"]}
     try:
         _fetch_one("SELECT 1", [])
     except MySQLdb.Error as exc:
         _record_failure(exc)
-        return jsonify({"status": "degraded", "database": "unreachable"}), 503
-    return jsonify({"status": "ok"})
+        body.update(status="degraded", database="unreachable")
+        return jsonify(body), 503
+    return jsonify(body)
 
 
 @app.get("/_fault")
