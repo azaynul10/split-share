@@ -167,10 +167,17 @@ before raising `QueryError`. User-facing behaviour unchanged.
   failures had been generated. Bluebox rejected the premise: two requests in 3 days, one
   502 yesterday, one 200 a minute ago, "I'd hold off on treating this as an active
   incident". Checked logs for coupon mentions too. Correct refusal to invent a pattern.
-- Same answer said `main` still lacks the coupon code ~10 min after PR #7 merged. Either a
-  cached repo view or a missed check; re-verification pending.
-- Full three-mode test (slow / error / down, 5 attempts each) pending, after the service
-  name fix.
+- **Stale repo view.** At 10 and again at 20 minutes after PR #7 merged, Bluebox said
+  `main` contains no `CouponServiceError` and no outbound call. Raw GitHub for `main`
+  showed both at the same time. For a product whose output is "a GitHub issue that cites
+  the code", reading a stale `main` is a correctness problem, not a cosmetic one.
+- Second question, after 2 `error`-mode attempts: correct table of the 3 requests, correct
+  single failure mode, correct attribution to `split-share-coupons`, did not invent the
+  modes that had not been run. Called it "intermittent", a fair read of 200/500/500.
+  Offered to file an issue and asked first; in chat it asks, in a routine it does not.
+- Coupon service still reported as `split-share-web`; the `OTEL_SERVICE_NAME` line was
+  still in the local `.env.otel` for that run.
+- Full three-mode test (slow / error / down, 5 attempts each) pending.
 
 ## Things that bit us that Bluebox could not see
 
