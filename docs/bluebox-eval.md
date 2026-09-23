@@ -176,7 +176,56 @@ before raising `QueryError`. User-facing behaviour unchanged.
   Offered to file an issue and asked first; in chat it asks, in a routine it does not.
 - Coupon service still reported as `split-share-web`; the `OTEL_SERVICE_NAME` line was
   still in the local `.env.otel` for that run.
-- Full three-mode test (slow / error / down, 5 attempts each) pending.
+
+### Three-mode test (23 Sep)
+
+**slow** (06:41-06:42 UTC, 1 baseline + 3 attempts):
+
+- Bluebox produced the exact table: 200 in 17 ms, then 504 x3 at 2.02-2.14 s. Named the
+  mechanism precisely: web gives up at the 2.0 s read timeout (`coupons.py:68`,
+  `requests.exceptions.ReadTimeout`), while the downstream `POST /validate` span shows
+  the coupon service **did answer 200, ~5 s later**. Called it a latency mismatch, not a
+  downstream error, and distinguished it from the 500s on 9-10 Sep. All correct; the
+  5 s figure is the injected `time.sleep(5)`.
+- Attribution: coupon service at fault (~300x slowdown from baseline); web "handled the
+  timeout correctly, returning a real 504 rather than swallowing it". Also volunteered
+  that 2 s is arguably too tight for that dependency's tail. Fair engineering read.
+- Recognised this as a third occurrence with two distinct signatures and proposed a
+  pattern-level tracking issue instead of another one-off. Asked before acting.
+- Claimed the coupon spans still carry `dt.service.name: split-share-web`. `/health` on
+  the running process said `split-share-coupons` at the same moment, so the claim was
+  either about older spans or wrong; see below.
+- **Still cannot find `coupons.py` or the coupon service in the connected repo**, 13 days
+  after PR #7 merged to `main`. The stale-repo problem is not a cache delay; something
+  about how it indexes the repo is not picking up post-connection files.
+
+**down + slow (again) + error** (06:53-06:55 UTC), asked as one question: "list every
+failure grouped by signature, name the service at fault for each, and what `service.name`
+do the coupon service's own spans carry now":
+
+- 23 requests, four clusters, one table, every row correct:
+  `ReadTimeout` 504 x3 (downstream answered 200 ~5 s later), `ConnectTimeout` 503 x3
+  (**no downstream span exists**, process not accepting connections), `ReadTimeout` 504
+  x3 again, `CouponServiceError` 502 x6 caused by downstream 500 with the message
+  "Injected fault: coupon rules engine unavailable" raised at `coupon_service/app.py:105`.
+  Then six 200s at 7-23 ms: "the dependency recovered". Counts, statuses, windows and
+  line number all match the servers' logs and the source.
+- Attribution: coupon service at fault in all four; web "returned an honest, distinct
+  error status (503/504/502 matching the specific cause)". Explicitly contrasted with the
+  Sep 6-8 DB incidents where failures hid behind 200s. That is the intended design and
+  it read it off the telemetry unprompted.
+- Read "Injected fault" in the exception message and inferred "a deliberately injected
+  test fault ... an active reliability/chaos exercise rather than a single incident".
+  Correct, and the right level of scepticism before filing anything.
+- Confirmed `dt.service.name: split-share-coupons` on the downstream `POST /validate`
+  spans, distinct from `split-share-web`. So the identity fix is live and its earlier
+  "inherits split-share-web" was stale. Also noted the residual gap: when the service is
+  fully down there is no downstream span at all, so "down" is only visible as a
+  client-side symptom on web, not as an availability signal on the coupon service.
+- `app.py:105` came from the stack trace in the span event, not the repo; it still said
+  it cannot find the coupon code in the repository. Trace-derived facts were correct;
+  repo-derived facts remain 13 days stale.
+- Asked before filing/updating a tracking issue (chat behaviour consistent: asks).
 
 ## Things that bit us that Bluebox could not see
 
@@ -214,6 +263,7 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - [x] Bluebox verified the fix against live traffic.
 - [ ] Add OTel logging so `db_utils` `logger.error` lines arrive trace-correlated.
 - [x] Coupon service split; failures at the service boundary. PR #7 merged.
-- [ ] Full three-mode coupon test (slow / error / down) with the service-name fix live.
+- [x] Full three-mode coupon test (slow / error / down) with the service-name fix live.
+      All four signatures attributed correctly; service identity confirmed fixed.
 - [ ] Try the Bluebox instrumentation skill on a scratch branch and diff against
       `feature/otel` (Claude Code now installed; rerun `bluebox setup` first).
