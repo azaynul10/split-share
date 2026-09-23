@@ -1,8 +1,7 @@
 # Bluebox evaluation notes
 
 Working notes from instrumenting Split Share with OpenTelemetry and pointing it at
-Bluebox (Dynatrace tenant `njh16107`). Chronological; the summary at the end is what
-goes to Andrew.
+Bluebox (Dynatrace tenant `njh16107`). Chronological.
 
 ## Setup
 
@@ -214,48 +213,7 @@ before raising `QueryError`. User-facing behaviour unchanged.
 - [x] Fix issue #4 (done by Cascade; Claude Code was not installed). PR #5 merged.
 - [x] Bluebox verified the fix against live traffic.
 - [ ] Add OTel logging so `db_utils` `logger.error` lines arrive trace-correlated.
-- [ ] Coupon service split; failures at the service boundary.
+- [x] Coupon service split; failures at the service boundary. PR #7 merged.
+- [ ] Full three-mode coupon test (slow / error / down) with the service-name fix live.
 - [ ] Try the Bluebox instrumentation skill on a scratch branch and diff against
       `feature/otel` (Claude Code now installed; rerun `bluebox setup` first).
-
-## Summary for Andrew (draft)
-
-**Worked well**
-
-- Never invented data. Under zero traffic it said so and listed exactly what it had.
-- Found a fully swallowed DB outage from absence alone (0 DB spans, fixed ~4 s latency,
-  all 200s) before the app emitted any error signal.
-- Once exception events were on the span, it produced the exception, the failing
-  frame (`db_utils.py:67`), and the correct explanation of why users saw 200/302.
-- The GitHub issue it opened quoted real code from the repo, proposed the right fix
-  shape (keep the friendly page, return 503), and did not propose the naive fix.
-- After the PR merged, it read the diff and confirmed the fix from live spans.
-- Shows its DQL. Everything it claimed was checkable, and I checked it.
-
-**Gaps**
-
-- Out of the box, proactive detection does not exist. Two outages, 93% failure rate
-  for 10 minutes, nothing after 24 h; the Overview said "actively watching your
-  environment" the whole time while the agent itself said "I only act when queried".
-  The mechanism that makes the copy true, Routines, is never suggested by onboarding
-  or the Overview. Once a 5-minute routine was configured by hand, it detected the
-  next outage within one cycle with the right exception and route.
-- Routines have no notification channel. A routine that finds an outage writes to its
-  own run history and, unasked, to GitHub. Nobody gets paged.
-- The routine filed a GitHub issue when the prompt only said "report". Accurate,
-  deduplicated, unrequested, and non-deterministic: 1 run in 14 did it, and Bluebox
-  confirms there is no setting that governs it, only prompt wording. A per-routine
-  "may open issues" switch is the missing control.
-- The Investigations panel stayed at "No investigations yet" through two outages, a
-  detected recurrence, and an issue that links to an investigation ID.
-- Default investigation did not look in `span.events`, so its first answer to "what
-  was the exception?" was "none recorded" while the exception was on the span.
-  One nudge fixed it, but unattended it would have shipped the wrong hypothesis.
-- Issue #4 mis-scoped the affected files (3 of 5 guesses wrong, 3 real ones missed)
-  and included a config red herring it kept repeating after the fix.
-- The onboarding assumes an installed coding agent for instrumentation; with none
-  detected it silently installed no skills. A hand-rolled OTel setup worked fine, but
-  the docs' `.env.otel.bluebox-template` never appeared.
-- It cannot see process-level problems. Six orphaned `runserver` processes on one
-  port cost more time than everything else combined, and the only telemetry symptom
-  ("bootstrap spans but never request spans") was misread as an instrumentation gap.

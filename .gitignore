@@ -25,6 +25,9 @@ staticfiles/
 *.dump
 db/_hash.txt
 
+# Private drafts (never published)
+docs/*.local.md
+
 # Editors and OS
 .vscode/
 .history/
